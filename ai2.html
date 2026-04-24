@@ -399,10 +399,11 @@
             <div class="model-name">
                 <i class="fas fa-sparkles"></i> Shepu-AI
                 <select id="versionSelector" onchange="changeVersion(this)">
+                    <option value="ai.html">v4.0</option>
+                    <option value="ai3.html">v3.0</option>
                     <option value="ai2.html" selected>v2.0</option>
-                  <option value="ai.html">v3.0</option>
                     <option value="ai1.html">v1.0</option>
-                    </select>
+                </select>
                 <span style="font-size: 12px; margin-left: 5px; opacity: 0.6;">(Smart V2)</span>
             </div>
             <button class="action-btn tts-btn-global" id="ttsToggle" onclick="toggleTTS()" title="Text to Speech"><i class="fas fa-volume-mute"></i></button>
@@ -800,6 +801,11 @@
             item.innerText = text;
             item.onclick = () => { userInput.value = text; sendMessage(); }
             list.prepend(item);
+        }
+
+        function changeVersion(select) {
+            const val = select.value;
+            if (val) window.location.href = val;
         }
 
         function toggleTheme() {
