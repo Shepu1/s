@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shepu-AI - Modern AI Chat (Feature Rich)</title>
+    <title>Shepu-AI v1.0 | Classic</title>
     <link rel="icon" href="Shepu.ico" type="image/x-icon">
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -374,11 +374,13 @@
                 <img src="Shepu.ico" alt="Shepu AI Logo" class="header-logo">
                 <span>Shepu-AI</span>
 
+                <span style="font-size:12px;margin-left:8px;opacity:0.6;font-weight:600;letter-spacing:1px;">v1.0</span>
                 <select id="versionSelect" class="version-select">
-                    <option value="v4">V4 (Pro)</option>
-                    <option value="v3">V3 (Smart)</option>
-                    <option value="v2">V2 (Advanced)</option>
-                    <option value="v1" selected>V1 (Default)</option>
+                    <option value="ai.html">v3.1 (Latest)</option>
+                    <option value="ai4.html">v3.0 (Pro)</option>
+                    <option value="ai3.html">v2.1 (Smart+)</option>
+                    <option value="ai2.html">v2.0 (Smart)</option>
+                    <option value="ai1.html" selected>v1.0 (Classic)</option>
                 </select>
 
                 <button id="liveChatToggle" class="live-chat-toggle" title="Live Chat (Voice Mode)">
@@ -409,17 +411,10 @@
 
         versionSelect.addEventListener('change', function() {
             const selectedVersion = this.value;
-
-            if (selectedVersion === 'v4') {
-                window.location.href = 'ai.html';
+            const currentPath = window.location.pathname.split('/').pop() || 'ai1.html';
+            if (currentPath !== selectedVersion) {
+                window.location.href = selectedVersion;
             }
-            else if (selectedVersion === 'v3') {
-                window.location.href = 'ai3.html';
-            }
-            else if (selectedVersion === 'v2') {
-                window.location.href = 'ai2.html';
-            }
-            // v1 → কোনো পরিবর্তন নেই, এই পেজেই থাকবে
         });
     });
     // *** ভার্সন সিলেকশন লজিক শেষ ***
