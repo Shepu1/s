@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shepu-AI v3.0 | Pro Assistant</title>
+    <link rel="icon" href="Shepu.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Roboto+Mono:wght@400;500&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="ai4.css">
+</head>
+<body class="dark-mode">
+    <div id="splashScreen">
+        <div class="splash-content">
+            <h1 class="splash-logo">Shepu-AI <span>v3.0</span></h1>
+            <div class="splash-shimmer"></div>
+        </div>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
+        <button class="new-chat-btn" onclick="location.reload()">
+            <i class="fas fa-plus"></i> New Chat
+        </button>
+        <div class="history-list" id="historyList"></div>
+        <div class="sidebar-footer" id="smartnessToggle" onclick="toggleUltraSmartness()">
+            <i class="fas fa-brain"></i> Ultra Smartness: <span id="smartnessStatus">ON</span>
+        </div>
+        <div class="sidebar-footer" onclick="toggleTheme()">
+            <i class="fas fa-adjust"></i> Switch Theme
+        </div>
+        <div class="sidebar-footer" onclick="setHackingMode()">
+            <i class="fas fa-skull-crossbones"></i> Hacking Mode
+        </div>
+    </div>
+    <div class="main-content" id="mainContent">
+        <div class="top-bar">
+            <div class="top-bar-content">
+                <i class="fas fa-bars" style="cursor: pointer; display: none;" id="menuBtn"></i>
+                <div class="model-name">
+                    <i class="fas fa-sparkles"></i> Shepu-AI
+                    <select id="versionSelector" onchange="changeVersion(this)">
+                        <option value="ai.html">v3.1 (Latest)</option>
+                        <option value="ai4.html" selected>v3.0 (Pro)</option>
+                        <option value="ai3.html">v2.1 (Smart+)</option>
+                        <option value="ai2.html">v2.0 (Smart)</option>
+                        <option value="ai1.html">v1.0 (Classic)</option>
+                    </select>
+                    <span style="font-size: 12px; margin-left: 5px; opacity: 0.6;">v3.0</span>
+                </div>
+                <button class="action-btn tts-btn-global" id="ttsToggle" onclick="toggleTTS()" title="Text to Speech"><i class="fas fa-volume-mute"></i></button>
+            </div>
+        </div>
+        <div class="chat-container" id="chatContainer">
+            <div class="msg bot">
+                <div class="avatar">
+                    <img id="ai-avatar" src="pai.png" alt="Shepu AI" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-robot\'></i>'">
+                </div>
+                <div class="msg-content">
+                    <h2 id="greetingText">Hello, I'm Shepu-AI v3.0</h2>
+                    <p style="opacity: 0.8;">I'm smarter now. Ask me anything from your files, check time, or solve math!</p>
+                    <div class="message-actions">
+                        <button class="msg-action-btn" onclick="speakMessage(this)" data-text="Hello, I'm Shepu-AI v3.0. I'm smarter now. Ask me anything from your files, check time, or solve math!" title="Read Aloud"><i class="fas fa-volume-up"></i></button>
+                        <button class="msg-action-btn" onclick="copyMessage(this)" data-text="Hello, I'm Shepu-AI v3.0. I'm smarter now. Ask me anything from your files, check time, or solve math!" title="Copy Text"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="scroll-to-bottom" id="scrollToBottom" onclick="scrollToBottom()">
+            <i class="fas fa-arrow-down"></i>
+        </button>
+        <div class="input-wrapper">
+            <div id="suggestionBox"></div>
+            <div class="input-box">
+                <button class="action-btn" id="voiceBtn"><i class="fas fa-microphone"></i></button>
+                <textarea id="userInput" placeholder="Ask anything..." rows="1"></textarea>
+                <button class="action-btn send-btn" id="sendBtn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <div style="text-align: center; font-size: 11px; margin-top: 8px; color: #555;">Shepu-AI is an experimental AI.</div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="ai4.js"></script>
+</body>
+</html>
