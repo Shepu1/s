@@ -1,6 +1,6 @@
 const EMBEDDED_DB = [
     { q: "hi", a: "হ্যালো! আমি Shepu-AI। আপনাকে কীভাবে সাহায্য করতে পারি?" },
-    { q: "who are you", a: "আমি **শেপু-আই v4.0**, আপনার স্মার্ট এআই অ্যাসিস্ট্যান্ট।" },
+    { q: "who are you", a: "আমি **শেপু-আই v3.0**, আপনার স্মার্ট এআই অ্যাসিস্ট্যান্ট।" },
     { q: "bye", a: "বিদায়! আপনার দিনটি ভালো কাটুক।" },
     { q: "ki korte paro", a: "আমি অংক সমাধান করতে পারি, ফাইল থেকে তথ্য খুঁজতে পারি এবং আপনার যেকোনো প্রশ্নের উত্তর দেওয়ার চেষ্টা করতে পারি।" }
 ];
@@ -130,9 +130,9 @@ function setDynamicGreeting() {
     const hour = new Date().getHours();
     const h2 = document.getElementById('greetingText');
     let greetingText;
-    if (hour < 12) greetingText = "শুভ সকাল, আমি Shepu-AI v4.0";
-    else if (hour < 18) greetingText = "শুভ অপরাহ্ন, আমি Shepu-AI v4.0";
-    else greetingText = "শুভ সন্ধ্যা, আমি Shepu-AI v4.0";
+    if (hour < 12) greetingText = "শুভ সকাল, আমি Shepu-AI v3.0";
+    else if (hour < 18) greetingText = "শুভ অপরাহ্ন, আমি Shepu-AI v3.0";
+    else greetingText = "শুভ সন্ধ্যা, আমি Shepu-AI v3.0";
     h2.innerText = greetingText;
 }
 
@@ -242,8 +242,8 @@ function findAnswer(query) {
         usedAnswers.add("হ্যালো!");
     }
     if (intents.identity.test(cleanQuery)) {
-        finalAnswers.push("আমি শেপু-আই v4.0");
-        usedAnswers.add("আমি শেপু-আই v4.0");
+        finalAnswers.push("আমি শেপু-আই v3.0");
+        usedAnswers.add("আমি শেপু-আই v3.0");
     }
 
     let matchedItems = [];
