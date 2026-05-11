@@ -1,516 +1,313 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy Products - সামর্থ্য Store</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Roboto', sans-serif;
-        }
-        body {
-            background: #0f0f0f;
-            color: #fff;
-            min-height: 100vh;
-            line-height: 1.6;
-            scroll-behavior: smooth;
-            -webkit-tap-highlight-color: transparent;
-        }
-        header {
-            background: linear-gradient(90deg, #ff6a00, #ee0979);
-            padding: 18px 20px;
-            text-align: center;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-            font-size: clamp(1.8rem, 5vw, 2.8rem);
-            letter-spacing: 3px;
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(238, 9, 121, 0.4);
-            position: relative;
-        }
-        header::after {
-            content: '🛒';
-            position: absolute;
-            right: 25px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.8rem;
-            opacity: 0.9;
-        }
-        .search-container {
-            padding: 20px 15px;
-            display: flex;
-            justify-content: center;
-            background: rgba(26, 26, 26, 0.6);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 900;
-        }
-        .search-container input[type="text"] {
-            width: 100%;
-            max-width: 520px;
-            padding: 14px 24px;
-            border: 2px solid #00eaff;
-            border-radius: 50px;
-            background: #1e1e1e;
-            color: #fff;
-            font-size: 1.1rem;
-            outline: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 234, 255, 0.2);
-        }
-        .search-container input[type="text"]:focus {
-            border-color: #ff6a00;
-            box-shadow: 0 0 20px #ff6a00,
-                        0 0 35px rgba(255, 106, 0, 0.5);
-            transform: scale(1.03);
-        }
-        .navbar {
-            background: #1a1a1a;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .nav-links {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            padding: 16px 0;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .nav-links a {
-            color: #fff;
-            text-decoration: none;
-            padding: 10px 22px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            position: relative;
-            border-radius: 30px;
-        }
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 50%;
-            width: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #FFD700, #ff6a00);
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-        }
-        .nav-links a:hover::after {
-            width: 70%;
-        }
-        .nav-links a:hover {
-            color: #FFD700;
-            background: rgba(255, 106, 0, 0.15);
-        }
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            cursor: pointer;
-            padding: 15px 20px;
-        }
-        .hamburger .line {
-            width: 28px;
-            height: 3px;
-            background: #fff;
-            margin: 4px 0;
-            transition: all 0.3s ease;
-            border-radius: 3px;
-        }
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-                flex-direction: column;
-                width: 100%;
-                background: #1a1a1a;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.8);
-                padding: 10px 0;
-            }
-            .nav-links.active {
-                display: flex;
-            }
-            .hamburger {
-                display: flex;
-                position: absolute;
-                right: 20px;
-                top: 50%;
-                transform: translateY(-50%);
-            }
-            .search-container input[type="text"] {
-                max-width: 100%;
-                padding: 16px 20px;
-                font-size: 1rem;
-            }
-            .container {
-                padding: 25px 15px;
-                gap: 20px;
-            }
-            .product-card {
-                margin: 0 auto;
-                max-width: 100%;
-            }
-            .buy-btn {
-                width: 92%;
-                max-width: none;
-                padding: 16px 32px;
-                font-size: 1.15rem;
-            }
-            #samorthyo-ai-button {
-                width: 52px;
-                height: 52px;
-                bottom: 18px;
-                right: 18px;
-            }
-            .product-name {
-                font-size: 1.25rem;
-            }
-            .price {
-                font-size: 1.35rem;
-            }
-        }
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            padding: 40px 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        @media (max-width: 480px) {
-            .container {
-                grid-template-columns: 1fr;
-                padding: 25px 15px;
-            }
-        }
-        .product-card {
-            background: #1e1e1e;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(255,255,255,0.08);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-        .product-card:hover {
-            transform: translateY(-12px) scale(1.04);
-            box-shadow: 0 20px 40px rgba(255, 105, 180, 0.4);
-        }
-        .discount-badge {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: linear-gradient(90deg, #ee0979, #ff6a00);
-            color: #fff;
-            font-size: 0.85rem;
-            font-weight: 700;
-            padding: 4px 14px;
-            border-radius: 50px;
-            box-shadow: 0 4px 12px rgba(238, 9, 121, 0.5);
-            z-index: 10;
-            letter-spacing: 1px;
-        }
-        .product-card img {
-            width: 100%;
-            height: 220px;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        .product-card:hover img {
-            transform: scale(1.1);
-        }
-        .product-name {
-            padding: 18px 18px 8px;
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #ff69b4;
-            text-align: center;
-            line-height: 1.3;
-        }
-        .price {
-            text-align: center;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #00ff9d;
-            margin-bottom: 12px;
-        }
-        .price del {
-            color: #888;
-            font-size: 1.1rem;
-            margin-right: 8px;
-        }
-        .buy-btn {
-            display: block;
-            margin: 0 auto 25px;
-            padding: 14px 32px;
-            background: linear-gradient(90deg, #ff6a00, #ee0979);
-            color: #fff;
-            font-weight: 700;
-            font-size: 1.1rem;
-            border-radius: 50px;
-            text-decoration: none;
-            text-align: center;
-            width: 85%;
-            max-width: 240px;
-            transition: all 0.4s ease;
-            box-shadow: 0 6px 20px rgba(238, 9, 121, 0.4);
-        }
-        .buy-btn:hover {
-            background: linear-gradient(90deg, #ee0979, #ff6a00);
-            transform: scale(1.08) translateY(-2px);
-            box-shadow: 0 12px 30px rgba(255, 106, 0, 0.6);
-        }
-        #samorthyo-ai-button {
-            width: 56px;
-            height: 56px;
-            background: radial-gradient(circle at 30% 30%, #00eaff, #006eff, #b300ff);
-            border: 3px solid rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            text-decoration: none;
-            z-index: 9999;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            box-shadow: 0 0 25px #00eaff;
-        }
-        #samorthyo-ai-button:hover {
-            transform: scale(1.3) rotate(15deg);
-            box-shadow: 0 0 40px #00eaff,
-                        0 0 70px #b300ff;
-        }
-        .smart-chat-icon {
-            width: 26px;
-            height: 22px;
-            border-radius: 8px;
-            border: 2.5px solid #fff;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 3px;
-            padding: 4px 5px;
-            background: rgba(255,255,255,0.1);
-        }
-        .smart-chat-icon::after {
-            content: "";
-            position: absolute;
-            bottom: -5px;
-            left: 8px;
-            width: 8px;
-            height: 8px;
-            border-left: 2.5px solid #fff;
-            border-bottom: 2.5px solid #fff;
-            border-radius: 2px;
-            transform: rotate(-45deg);
-        }
-        .smart-chat-icon .line {
-            height: 2.5px;
-            background: #fff;
-            border-radius: 2px;
-        }
-        .smart-chat-icon .line:nth-child(2) { width: 65%; }
-        .smart-chat-icon .line:nth-child(3) { width: 45%; }
-        #noResults {
-            display: none;
-            text-align: center;
-            grid-column: 1 / -1;
-            padding: 60px 20px;
-            font-size: 1.4rem;
-            color: #888;
-        }
-        .highlight {
-            background: #ffeb3b;
-            color: #000;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-weight: 700;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EverydayBD Shop</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      background: linear-gradient(135deg, #0f2027, #14532d, #22c55e);
+      overflow-x:hidden;
+    }
+
+    /* Stylish Navbar */
+
+    .navbar{
+      width:100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:18px 40px;
+      position:fixed;
+      top:0;
+      left:0;
+      z-index:1000;
+
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+
+      border-bottom:1px solid rgba(255,255,255,0.15);
+      box-shadow:0 5px 25px rgba(0,0,0,0.2);
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      list-style:none;
+      gap:15px;
+    }
+
+    .nav-links li a{
+      position:relative;
+      text-decoration:none;
+      color:white;
+      font-size:17px;
+      font-weight:bold;
+      padding:12px 22px;
+      border-radius:30px;
+      transition:0.35s ease;
+      overflow:hidden;
+    }
+
+    .nav-links li a::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:rgba(255,255,255,0.12);
+      border-radius:30px;
+      transform:scale(0);
+      transition:0.35s ease;
+      z-index:-1;
+    }
+
+    .nav-links li a:hover::before{
+      transform:scale(1);
+    }
+
+    .nav-links li a:hover{
+      color:#d1fae5;
+      box-shadow:0 0 18px rgba(255,255,255,0.15);
+    }
+
+    /* Active Nav */
+
+    .nav-links li.active a{
+      background:white;
+      color:#14532d;
+      box-shadow:0 0 20px rgba(255,255,255,0.4);
+    }
+
+    .nav-links li.active a:hover{
+      color:#14532d;
+    }
+
+    /* Hamburger */
+
+    .hamburger{
+      display:none;
+      flex-direction:column;
+      cursor:pointer;
+      gap:6px;
+      position:absolute;
+      right:20px;
+    }
+
+    .line{
+      width:30px;
+      height:3px;
+      background:white;
+      border-radius:10px;
+      transition:0.3s;
+    }
+
+    /* Main Section */
+
+    .container{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      padding:100px 20px 20px;
+    }
+
+    h1{
+      color:white;
+      font-size:58px;
+      margin-bottom:35px;
+      text-shadow:0 0 20px rgba(255,255,255,0.5);
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding:18px 50px;
+      font-size:22px;
+      font-weight:bold;
+      color:#14532d;
+      text-decoration:none;
+      border-radius:50px;
+      background:white;
+      border:3px solid #22c55e;
+      box-shadow:0 0 25px rgba(34,197,94,0.7);
+      transition:0.35s ease;
+      position:relative;
+      overflow:hidden;
+      max-width:100%;
+    }
+
+    .btn:hover{
+      background:#22c55e;
+      color:white;
+      transform:scale(1.05);
+      box-shadow:0 0 40px rgba(34,197,94,1);
+    }
+
+    .btn::before{
+      content:'';
+      position:absolute;
+      top:0;
+      left:-100%;
+      width:100%;
+      height:100%;
+      background:rgba(255,255,255,0.25);
+      transform:skewX(-25deg);
+      transition:0.6s;
+    }
+
+    .btn:hover::before{
+      left:120%;
+    }
+
+    .arrow{
+      font-size:26px;
+      transition:0.3s;
+    }
+
+    .btn:hover .arrow{
+      transform:translateX(6px);
+    }
+
+    /* Mobile */
+
+    @media (max-width: 768px){
+
+      .navbar{
+        justify-content:flex-end;
+        padding:18px 20px;
+      }
+
+      .hamburger{
+        display:flex;
+      }
+
+      .nav-links{
+        position:absolute;
+        top:80px;
+        right:-100%;
+        width:240px;
+
+        flex-direction:column;
+        align-items:center;
+        gap:18px;
+
+        padding:30px 20px;
+
+        background:rgba(20, 83, 45, 0.98);
+        backdrop-filter: blur(15px);
+
+        border-radius:20px;
+        border:1px solid rgba(255,255,255,0.12);
+
+        box-shadow:0 10px 30px rgba(0,0,0,0.3);
+
+        transition:0.4s ease;
+      }
+
+      .nav-links.active{
+        right:20px;
+      }
+
+      .nav-links li{
+        width:100%;
+      }
+
+      .nav-links li a{
+        display:block;
+        width:100%;
+        text-align:center;
+      }
+
+      h1{
+        font-size:40px;
+      }
+
+      .btn{
+        width:100%;
+        max-width:320px;
+        padding:16px 20px;
+        font-size:20px;
+        border-radius:20px;
+      }
+    }
+
+    @media (max-width: 400px){
+
+      h1{
+        font-size:32px;
+      }
+
+      .btn{
+        font-size:18px;
+      }
+    }
+
+  </style>
 </head>
 <body>
-    <a href="ai.html" id="samorthyo-ai-button">
-        <div class="smart-chat-icon">
-            <span class="line"></span>
-            <span class="line"></span>
-            <span class="line"></span>
-        </div>
-    </a>
+
     <nav class="navbar">
+
         <ul class="nav-links" id="navLinks">
+
             <li><a href="index.html">Home</a></li>
+
             <li><a href="contact.html">Contact</a></li>
+
             <li><a href="Apps&Games.html">Apps & Games</a></li>
-            <li><a href="Buy.html">Shop</a></li>
+
+            <li class="active"><a href="Buy.html">Shop</a></li>
+
             <li><a href="About.html">About</a></li>
+
         </ul>
+
         <div class="hamburger" id="hamburger">
             <div class="line"></div>
             <div class="line"></div>
             <div class="line"></div>
         </div>
+
     </nav>
-    <header>সামর্থ্য Store</header>
-    <div class="search-container">
-        <input type="text" id="productSearch" placeholder="🔍 প্রোডাক্ট খুঁজুন... (uno, lighter, bracelet, কার্ড, লাইটার, ব্রেসলেট, খেলা)">
+
+    <div class="container">
+
+      <h1>EverydayBD</h1>
+
+      <a 
+        href="https://everydaybd.github.io/store"
+        class="btn"
+        target="_blank"
+      >
+        Enter EverydayBD
+        <span class="arrow">➜</span>
+      </a>
+
     </div>
-    <div class="container" id="productContainer">
-        <div class="product-card" data-name="uno" data-keywords="card game,uno cards,family game,playing cards,uno game,card,uno,উনো,কার্ড গেম,খেলার কার্ড,প্লেয়িং কার্ড,ফ্যামিলি গেম,উনো কার্ড,কার্ড খেলা,গেম,খেলা,কার্ড">
-            <div class="discount-badge">৩৩% OFF</div>
-            <img src="uno.png" alt="UNO">
-            <div class="product-name" data-original-name="UNO Card Game">UNO Card Game</div>
-            <div class="price"><del>১৫০</del> ১০০৳</div>
-            <a href="https://skshepu58-dot.github.io/Shepu/order.html" class="buy-btn">Order Now</a>
-        </div>
-        <div class="product-card" data-name="lighter stylish" data-keywords="lighter,stylish lighter,fire lighter,zippo,flame lighter,light,stylish fire,লাইটার,স্টাইলিশ লাইটার,ফায়ার লাইটার,জিপো,আগুন লাইটার,লাইট,ফায়ার,আগুন">
-            <div class="discount-badge">৩৩% OFF</div>
-            <img src="lighter.png" alt="Stylish Lighter">
-            <div class="product-name" data-original-name="Stylish Lighter">Stylish Lighter</div>
-            <div class="price"><del>১৫০</del> ১০০৳</div>
-            <a href="https://skshepu58-dot.github.io/Shepu/order.html" class="buy-btn">Order Now</a>
-        </div>
-        <div class="product-card" data-name="bracelets stylish" data-keywords="bracelets,stylish bracelets,wristband,fashion bracelets,hand chain,bracelet,stylish wrist,ব্রেসলেট,স্টাইলিশ ব্রেসলেট,হাতের চেন,ফ্যাশন ব্রেসলেট,ব্রেসলেট,হ্যান্ড চেইন,কব্জি ব্যান্ড,স্টাইলিশ হাতের গয়না">
-            <div class="discount-badge">৩৩% OFF</div>
-            <img src="bracelets.png" alt="Stylish Bracelets">
-            <div class="product-name" data-original-name="Stylish Bracelets">Stylish Bracelets</div>
-            <div class="price"><del>১৫০</del> ১০০৳</div>
-            <a href="https://skshepu58-dot.github.io/Shepu/order.html" class="buy-btn">Order Now</a>
-        </div>
-        <div id="noResults">কোনো প্রোডাক্ট পাওয়া যায়নি 😔<br>আরেকটু ভিন্নভাবে খুঁজে দেখুন</div>
-    </div>
+
     <script>
-        const hamburger = document.getElementById('hamburger');
-        const navLinks = document.getElementById('navLinks');
-        hamburger.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            const lines = hamburger.querySelectorAll('.line');
-            if (navLinks.classList.contains('active')) {
-                lines[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-                lines[1].style.opacity = '0';
-                lines[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
-            } else {
-                lines[0].style.transform = 'none';
-                lines[1].style.opacity = '1';
-                lines[2].style.transform = 'none';
-            }
-        });
 
-        const searchInput = document.getElementById('productSearch');
-        const productContainer = document.getElementById('productContainer');
-        const originalCards = Array.from(productContainer.querySelectorAll('.product-card'));
-        const noResults = document.getElementById('noResults');
+      const hamburger = document.getElementById("hamburger");
+      const navLinks = document.getElementById("navLinks");
 
-        function escapeRegExp(string) {
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // বাগ ফিক্স: রেগুলার এক্সপ্রেশনের জন্য স্পেশাল ক্যারেক্টার এস্কেপ করা হলো
-        }
+      hamburger.addEventListener("click", () => {
+        navLinks.classList.toggle("active");
+      });
 
-        function fuzzyMatch(text, query) {
-            text = text.toLowerCase();
-            query = query.toLowerCase();
-            let i = 0;
-            for (let char of query) {
-                i = text.indexOf(char, i);
-                if (i === -1) return false;
-                i++;
-            }
-            return true;
-        }
-
-        function getRelevanceScore(card, searchTerm) {
-            if (!searchTerm) return 100;
-            const nameEl = card.querySelector('.product-name');
-            const name = nameEl.textContent.toLowerCase();
-            const dataName = (card.getAttribute('data-name') || '').toLowerCase();
-            const keywords = (card.getAttribute('data-keywords') || '').toLowerCase().split(',').map(k => k.trim());
-            let score = 0;
-            const terms = searchTerm.toLowerCase().trim().split(/\s+/).filter(Boolean);
-            const fullText = name + " " + dataName + " " + keywords.join(" ");
-            
-            if (fullText.includes(searchTerm.toLowerCase().trim())) score += 90;
-            terms.forEach(term => {
-                if (name.includes(term) || dataName.includes(term) || keywords.some(k => k.includes(term))) {
-                    score += 40;
-                } else if (fuzzyMatch(name, term) || fuzzyMatch(dataName, term) || keywords.some(k => fuzzyMatch(k, term))) {
-                    score += 22;
-                }
-            });
-            if (terms.length === 1 && score > 0) score += 18;
-            return score;
-        }
-
-        function highlightText(element, searchTerm) {
-            if (!searchTerm) return;
-            let text = element.dataset.originalName;
-            const terms = searchTerm.toLowerCase().trim().split(/\s+/).filter(Boolean);
-            terms.forEach(term => {
-                const escapedTerm = escapeRegExp(term); // বাগ ফিক্স প্রয়োগ
-                const regex = new RegExp(`(${escapedTerm})`, 'gi');
-                text = text.replace(regex, '<span class="highlight">$1</span>');
-            });
-            element.innerHTML = text;
-        }
-
-        function filterProducts() {
-            const searchTerm = searchInput.value.trim();
-            if (!searchTerm) {
-                originalCards.forEach(card => {
-                    card.style.display = 'block';
-                    const nameEl = card.querySelector('.product-name');
-                    if (nameEl) nameEl.innerHTML = nameEl.dataset.originalName;
-                    productContainer.insertBefore(card, noResults);
-                });
-                noResults.style.display = 'none';
-                return;
-            }
-            let results = [];
-            originalCards.forEach(card => {
-                const score = getRelevanceScore(card, searchTerm);
-                if (score > 10) results.push({ card, score });
-            });
-            results.sort((a, b) => b.score - a.score);
-            originalCards.forEach(card => card.style.display = 'none');
-            const fragment = document.createDocumentFragment();
-            results.forEach(({card}) => {
-                card.style.display = 'block';
-                const nameEl = card.querySelector('.product-name');
-                if (nameEl) {
-                    nameEl.innerHTML = nameEl.dataset.originalName;
-                    highlightText(nameEl, searchTerm);
-                }
-                fragment.appendChild(card);
-            });
-            productContainer.insertBefore(fragment, noResults);
-            noResults.style.display = results.length === 0 ? 'block' : 'none';
-        }
-
-        let timeout;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(filterProducts, 80);
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '/' && document.activeElement.tagName !== "INPUT") {
-                e.preventDefault();
-                searchInput.focus();
-            }
-        });
     </script>
+
 </body>
 </html>
