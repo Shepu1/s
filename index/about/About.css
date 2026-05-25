@@ -1,0 +1,229 @@
+/* ---------- Basic ---------- */
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Poppins",sans-serif}
+html,body{height:100%; overflow-x: hidden; }
+
+/* ** কাস্টম কার্সার সেট করা হয়েছে ** */
+body{
+  background:linear-gradient(-45deg,#050814,#071022,#08101a,#15041f);
+  background-size:400% 400%;
+  animation:bgMove 14s ease infinite;
+  color:#eaf6ff;
+  -webkit-font-smoothing:antialiased;
+  cursor: pointer; /* মাউসের লোগো পরিবর্তন করা হয়েছে */
+}
+a, button, .hamburger, .socials a, .download { cursor: pointer; }
+
+@keyframes bgMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+/* ---------- NAVBAR ---------- */
+.navbar{
+  position:fixed;top:0;left:0;width:100%;padding:14px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  backdrop-filter:blur(10px);background:rgba(255,255,255,0.03);
+  border-bottom:1px solid rgba(0,255,255,0.06);z-index:9999;
+}
+.logo{
+    font-family:'Orbitron';font-size:20px;color:#7ff;letter-spacing:2px;
+    text-shadow:0 0 5px rgba(127, 255, 255, 0.4);
+    transition:text-shadow 0.3s ease;
+}
+.logo:hover {
+    text-shadow:0 0 15px #7ff, 0 0 30px #0af;
+}
+
+.nav-links{display:flex;gap:22px;align-items:center}
+.nav-links a{
+    color:#eaf6ff;text-decoration:none;font-weight:600;padding:8px 12px;border-radius:8px;
+    transition:all .35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+/* INTERACTIVE NAV LINK (Transform/Translate removed for stability) */
+.nav-links a:hover{
+    color:#000;
+    background:linear-gradient(90deg,#7ff,#0af);
+    box-shadow:0 0 16px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.1);
+}
+.hamburger{display:none;color:#7ff;font-size:22px;cursor:pointer}
+
+/* mobile menu */
+.mobile-menu{
+  position:fixed;right:-100%;top:0;height:100%;width:76%;
+  max-width:320px;background:rgba(6,8,15,0.97);backdrop-filter:blur(16px);
+  padding-top:84px;padding-left:24px;padding-right:24px;transition:.35s;z-index:9998;
+}
+.mobile-menu a{display:block;color:#eaf6ff;text-decoration:none;padding:14px 8px;border-radius:10px;font-weight:600; transition:all .25s}
+.mobile-menu a:hover{color:#000;background:#7ff}
+
+/* ---------- INTRO LOADER (cube) ---------- */
+#intro{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
+  background:transparent;z-index:9000;pointer-events:none;
+}
+.shepu-title{font-family:'Orbitron';font-size:48px;color:#7ff;text-shadow:0 0 18px rgba(0,255,255,0.25);margin-bottom:26px;pointer-events:auto}
+.cube-wrap{perspective:900px;width:120px;height:120px;pointer-events:auto}
+.cube{
+  width:120px;height:120px;position:relative;transform-style:preserve-3d;
+  animation:spinCube 4s linear infinite;
+}
+.cube .face{
+  position:absolute;width:120px;height:120px;background:linear-gradient(180deg,rgba(0,255,255,0.06),rgba(179,0,255,0.03));
+  border:2px solid rgba(127,255,255,0.55);
+  box-shadow:0 0 26px rgba(0,255,255,0.12), inset 0 0 18px rgba(127,255,255,0.03);
+  border-radius:8px;
+}
+.cube .front { transform: translateZ(60px) }
+.cube .back  { transform: rotateY(180deg) translateZ(60px) }
+.cube .right { transform: rotateY(90deg) translateZ(60px) }
+.cube .left  { transform: rotateY(-90deg) translateZ(60px) }
+.cube .top   { transform: rotateX(90deg) translateZ(60px) }
+.cube .bottom{ transform: rotateX(-90deg) translateZ(60px) }
+@keyframes spinCube{ from{transform:rotateX(-20deg) rotateY(0)} to{transform:rotateX(-20deg) rotateY(360deg)} }
+
+/* hide intro after load by JS (opacity transition) */
+#intro.hidden{opacity:0;visibility:hidden;transition:opacity .9s ease,visibility .9s}
+
+/* ---------- MAIN WRAPPER / ABOUT CARD ---------- */
+.container{width:94%;max-width:1080px;margin:120px auto 80px}
+
+/* Interactive Card Base */
+.about-card{
+  /* Using a pseudo-element for the dynamic glow effect */
+  position: relative;
+  z-index: 10;
+  background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));
+  border-radius:18px;padding:34px 30px;backdrop-filter:blur(10px);
+  box-shadow:0 8px 30px rgba(0,0,0,0.5), 0 0 28px rgba(0,255,255,0.04);
+  transition:all .5s ease;
+  overflow: hidden;
+}
+
+/* Pseudo-element for Mouse-following Glow */
+.about-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 255, 255, 0.15) 0%, transparent 40%);
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    z-index: -1;
+}
+.about-card:hover::before {
+    opacity: 1;
+}
+
+
+/* layout */
+.top-grid{display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+.left-col{flex:0 0 200px;text-align:center}
+.right-col{flex:1;min-width:260px}
+
+/* profile image */
+.profile-img{
+  width:170px;height:170px;border-radius:50%;object-fit:cover;
+  display:block;margin:0 auto;border:3px solid rgba(0,255,255,0.8);
+  box-shadow:0 0 24px rgba(0,255,255,0.15), 0 6px 24px rgba(0,0,0,0.5);
+  transition:transform .3s ease;
+}
+.profile-img:hover {
+    transform: rotate(3deg) scale(1.03);
+}
+
+/* name & tagline */
+.name{font-family:'Orbitron';font-size:28px;color:#7ff;text-align:center;margin-top:12px}
+.tagline{font-size:0.98rem;color:#dff7ff;text-align:center;margin-top:6px}
+
+/* right column content */
+.about-text{line-height:1.7;color:#e6f9ff;margin-bottom:14px;font-size:1rem}
+.highlight{color:#7ff;font-weight:700}
+
+/* small info list */
+.info-grid{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}
+.info-item{
+    background:rgba(255,255,255,0.02);padding:10px 14px;border-radius:10px;font-size:0.95rem;
+    min-width:150px;text-align:center;
+    transition:background .3s, transform .2s;
+}
+.info-item:hover {
+    background:rgba(0,255,255,0.05);
+    transform:translateY(-2px);
+}
+
+/* Skills area */
+.skills{margin-top:20px}
+.skill-row{margin-bottom:14px; transition:transform .3s ease, box-shadow .3s ease;}
+/* INTERACTIVE SKILL ROW */
+.skill-row:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+.skill-title{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px}
+.skill-bar{height:12px;background:#09121a;border-radius:12px;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
+.skill-fill{
+  height:100%;width:0%;border-radius:12px;
+  background:linear-gradient(90deg,#00eaff,#0055ff,#b300ff);
+  box-shadow:0 0 16px rgba(0,255,255,0.12);
+  transition:width 1.8s cubic-bezier(.2,.9,.2,1);
+}
+
+/* hobbies & contact & download */
+.extras{display:flex;gap:18px;margin-top:22px;flex-wrap:wrap}
+.card-mini{
+    flex:1;min-width:220px;background:rgba(255,255,255,0.02);padding:14px;border-radius:12px;
+    transition:transform .4s ease, box-shadow .3s ease;
+    transform-style: preserve-3d;
+}
+/* INTERACTIVE MINI CARD (FLIP - Rotations removed for stability) */
+.card-mini:hover {
+    transform: scale(1.02); /* Only scale for stability */
+    box-shadow:0 0 20px rgba(127,255,255,0.3);
+}
+.card-mini h4{color:#7ff;margin-bottom:6px}
+.socials{display:flex;gap:10px;margin-top:8px}
+.socials a{
+    display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;
+    background:rgba(255,255,255,0.02);color:#eaf6ff;text-decoration:none;
+    transition:all .3s ease;
+}
+/* INTERACTIVE SOCIALS */
+.socials a:hover{
+    background:#7ff;
+    color:#04111a;
+    transform:translateY(-3px) scale(1.05);
+    box-shadow:0 4px 15px rgba(0,255,255,0.4);
+}
+
+.download{
+    display:inline-block;margin-top:12px;padding:10px 18px;border-radius:999px;
+    background:linear-gradient(90deg,#00eaff,#7f3cff);color:#04111a;text-decoration:none;
+    font-weight:700;box-shadow:0 6px 20px rgba(127,255,255,0.06);
+    transition:all .3s ease;
+}
+/* INTERACTIVE DOWNLOAD BUTTON (Scale removed for stability) */
+.download:hover{
+    /* transform:scale(1.05); Scale removed for stability */
+    box-shadow:0 8px 25px rgba(127,255,255,0.2), 0 0 30px rgba(0,255,255,0.1);
+    opacity: 0.9;
+}
+
+/* footer small note */
+.note{margin-top:18px;font-size:0.9rem;color:#bfefff}
+
+/* responsive */
+@media(max-width:860px){
+  .top-grid{flex-direction:column;align-items:center;text-align:center}
+  .left-col{flex-basis:auto}
+  .right-col{width:100%}
+  .about-card::before {
+    opacity: 0 !important;
+  }
+}
+@media(max-width:720px){
+  .hamburger{display:block}
+  .nav-links{display:none}
+  .container{margin-top:110px}
+  .mobile-menu{width:80%}
+}

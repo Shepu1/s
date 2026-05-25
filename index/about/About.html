@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>About Me - Shipu</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <link rel="stylesheet" href="About.css">
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">SHEPU</div>
+
+  <nav class="nav-links" aria-label="main navigation">
+    <a href="../home/index.html">Home</a>
+    <a href="../apps/Apps&Games.html">Apps & Games</a>
+    <a href="../buy/Buy.html">Shop</a>
+    <a href="../contact/contact.html">Contact</a>
+    <a href="../about/About.html">About</a>
+    <a href="https://readnap.com" target="_blank" rel="noopener noreferrer">Book</a>
+  </nav>
+
+  <div class="hamburger" id="hambBtn" onclick="openMobile()">
+    <i class="fa-solid fa-bars"></i>
+  </div>
+</header>
+
+<div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+  <a href="#" onclick="closeMobile()">Close ✕</a>
+  <a href="../home/index.html">Home</a>
+  <a href="../apps/Apps&Games.html">Apps & Games</a>
+  <a href="../buy/Buy.html">Shop</a>
+  <a href="../contact/contact.html">Contact</a>
+  <a href="../about/About.html">About</a>
+  <a href="https://readnap.com" target="_blank" rel="noopener noreferrer">Book</a>
+</div>
+
+<section id="intro">
+  <div class="shepu-title">SHEPU</div>
+  <div class="cube-wrap">
+    <div class="cube" aria-hidden="true">
+      <div class="face front"></div>
+      <div class="face back"></div>
+      <div class="face right"></div>
+      <div class="face left"></div>
+      <div class="face top"></div>
+      <div class="face bottom"></div>
+    </div>
+  </div>
+</section>
+
+<main class="container">
+  <article class="about-card" id="aboutCard">
+
+    <div class="top-grid">
+      <div class="left-col">
+        <img src="../assets/Shepu.jpg" alt="Shipu Photo" class="profile-img" id="profileImage" onerror="this.src='../assets/Shepu.jpg'">
+        <div class="name">Shareharjan Shepu</div>
+        <div class="tagline">Web Developer • AI Enthusiast • Student</div>
+      </div>
+
+      <div class="right-col">
+        <p class="about-text">
+          <strong class="highlight">Hello! I'm Shepu</strong> — a passionate developer and tech enthusiast from Bangladesh.
+          I love creating stylish websites and exploring new technologies. My goal is to make modern, responsive, and user-friendly web applications.
+        </p>
+
+        <div class="info-grid">
+          <div class="info-item"><strong>Location</strong><div>Bangladesh</div></div>
+          <div class="info-item"><strong>Languages</strong><div>Bangla, English</div></div>
+        </div>
+
+        <p class="about-text" style="margin-top:12px">
+          <strong>Aim:</strong> To build useful web & AI projects that help people and grow my skills.
+          <strong>Interests:</strong> Coding, Gaming, Learning New Things.
+        </p>
+      </div>
+    </div>
+
+    <section class="skills" aria-label="skills">
+      <h3 style="color:#7ff;margin-top:12px">Skills</h3>
+
+      <div class="skill-row">
+        <div class="skill-title"><span>HTML</span><span>95%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-value="95%"></div></div>
+      </div>
+
+      <div class="skill-row">
+        <div class="skill-title"><span>CSS</span><span>90%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-value="90%"></div></div>
+      </div>
+
+      <div class="skill-row">
+        <div class="skill-title"><span>JavaScript</span><span>70%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-value="70%"></div></div>
+      </div>
+
+      <div class="skill-row">
+        <div class="skill-title"><span>Python</span><span>85%</span></div>
+        <div class="skill-bar"><div class="skill-fill" data-value="85%"></div></div>
+      </div>
+    </section>
+
+    <div class="extras">
+      <div class="card-mini">
+        <h4>Hobbies</h4>
+        <div>• Coding<br>• Gaming<br>• Learning New Things</div>
+      </div>
+
+      <div class="card-mini">
+        <h4>Contact</h4>
+        <div style="margin-top:6px">Phone: <strong>+8801757143424</strong></div>
+        <div style="margin-top:6px">Email: <strong>shepu9462@gmail.com</strong></div>
+        <div class="socials" style="margin-top:10px">
+          <a href="https://www.facebook.com/share/14NngtcLHyy/" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://wa.me/8801757143424" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://www.instagram.com/shareharjanshepu?igsh=eWd4aHduODNhYzBh" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+        </div>
+      </div>
+
+      <div class="card-mini" style="text-align:center">
+        <h4>Download</h4>
+        <a class="download" href="../assets/cv.pdf" download>Download CV</a>
+
+      </div>
+    </div>
+
+  </article>
+</main>
+
+    <script src="About.js"></script>
+</body>
+</html>
+

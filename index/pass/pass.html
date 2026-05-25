@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professional Password Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="pass.css">
+</head>
+<body class="dark-theme">
+<header>
+    <h1>Secure PassGen</h1>
+    <button id="themeToggle">Light Theme</button>
+</header>
+<div class="main-content">
+    <h2>Generate Secure Passwords</h2>
+    <div class="input-group">
+        <label for="length">Password Length:</label>
+        <input type="range" id="length" min="8" max="64" value="16">
+        <span id="lengthValue">16</span>
+    </div>
+    <div class="input-group">
+        <label for="numPasswords">Number of Passwords:</label>
+        <input type="number" id="numPasswords" min="1" max="10" value="1">
+    </div>
+    <div class="options">
+        <label><input type="checkbox" id="includeUpper" checked> Uppercase Letters</label>
+        <label><input type="checkbox" id="includeLower" checked> Lowercase Letters</label>
+        <label><input type="checkbox" id="includeNumbers" checked> Numbers</label>
+        <label><input type="checkbox" id="includeSymbols" checked> Symbols</label>
+        <label><input type="checkbox" id="avoidAmbiguous"> Avoid Ambiguous Characters (0,O,1,l,I)</label>
+    </div>
+    <div class="buttons-group">
+        <button id="generateBtn">Generate Strong Password</button>
+        <button id="copyBtn">Copy Password(s)</button>
+    </div>
+    <div id="password-display">
+        <div class="spinner" id="loader" style="display:none;">
+          <div></div><div></div><div></div>
+          <div></div><div></div><div></div>
+        </div>
+        <div class="tooltip">Click to Copy!</div>
+    </div>
+    <div id="strengthDisplay">Strength: -</div>
+    <div class="note">Choose a length between 8 and 64 characters.</div>
+    <!-- Additional Buttons -->
+    <button id="smartBtn">Smart Password Generation</button>
+    <button id="checkBtn">Check Password Strength</button>
+</div>
+<!-- Smart Password Modal -->
+<div id="smartModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Enter Information for Smart Password</h2>
+        <label for="userName">Your Name</label>
+        <input type="text" id="userName" placeholder="Enter your name">
+        <label for="userLucky">Lucky Number</label>
+        <input type="text" id="userLucky" placeholder="Enter lucky number">
+        <button id="modalGenerate">Generate Password</button>
+    </div>
+</div>
+<!-- Check Password Modal -->
+<div id="checkModal" class="modal">
+    <div class="modal-content">
+        <span class="close-check">&times;</span>
+        <h2>Check Password Strength</h2>
+        <label for="checkInput">Enter Password</label>
+        <div class="password-field">
+            <input type="password" id="checkInput" placeholder="Type your password here">
+            <button id="toggleCheck">Show</button>
+        </div>
+        <div id="strengthBadge">Strength: -</div>
+    </div>
+</div>
+    <script src="pass.js"></script>
+</body>
+</html>
