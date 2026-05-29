@@ -1,0 +1,21 @@
+{
+  "name": "Shepu-AI v3.1",
+  "short_name": "Shepu-AI",
+  "description": "Professional AI Assistant by Shepu",
+  "start_url": "./ai.html",
+  "display": "standalone",
+  "background_color": "#131314",
+  "theme_color": "#131314",
+  "icons": [
+    {
+      "src": "pai.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pai.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
