@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shipu.py - Pro Editor</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/darcula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/eclipse.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
+
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+      <link rel="stylesheet" href="pce.css">
+</head>
+<body>
+
+  <div id="loader">
+    <div class="spinner"></div>
+    <p style="margin-top:20px; font-size: 14px; color: var(--text-dim);">Preparing Python Environment...</p>
+  </div>
+
+  <header>
+    <div class="brand">
+      <i class="ph-bold ph-brackets-curly" style="font-size: 20px; color: var(--accent);"></i>
+      <span>Shepu-py <span style="font-weight:400; opacity:0.7;">Editor</span></span>
+    </div>
+
+    <div class="toolbar-center">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <i class="ph ph-file-py" style="font-size: 16px; color: var(--accent);"></i>
+        <span id="active-file-title">shipu.py</span>
+      </div>
+      <button class="btn-run" onclick="runPython()">
+        <i class="ph-fill ph-play"></i> Run
+      </button>
+      
+      <!-- Snippets/Templates Dropdown -->
+      <div style="position: relative; display: inline-block;">
+        <button class="btn-secondary" onclick="toggleTemplatesDropdown(event)" style="background: #393b40; border: 1px solid #45474d; border-radius: 4px; padding: 6px 12px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text-main); font-weight: 500; height: 30px;">
+          <i class="ph ph-code"></i> Templates <i class="ph ph-caret-down"></i>
+        </button>
+        <div id="templates-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; z-index: 100; min-width: 160px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); margin-top: 6px; overflow: hidden;">
+          <a href="#" onclick="loadTemplate('hello', event)" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; text-decoration: none; color: var(--text-main); border-bottom: 1px solid var(--border); transition: background 0.2s;">
+            <i class="ph ph-hand-waving"></i> Hello World
+          </a>
+          <a href="#" onclick="loadTemplate('calc', event)" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; text-decoration: none; color: var(--text-main); border-bottom: 1px solid var(--border); transition: background 0.2s;">
+            <i class="ph ph-calculator"></i> Calculator
+          </a>
+          <a href="#" onclick="loadTemplate('fib', event)" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; text-decoration: none; color: var(--text-main); border-bottom: 1px solid var(--border); transition: background 0.2s;">
+            <i class="ph ph-chart-line-up"></i> Fibonacci
+          </a>
+          <a href="#" onclick="loadTemplate('plot', event)" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; text-decoration: none; color: var(--text-main); transition: background 0.2s;">
+            <i class="ph ph-presentation-chart"></i> NumPy & Plot
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 15px; align-items: center;">
+      <i class="ph ph-gear icon-btn" onclick="openSettingsModal()" style="font-size: 20px;"></i>
+      <i class="ph ph-user-circle icon-btn" style="font-size: 22px;"></i>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="activity-bar">
+      <i class="ph ph-files icon-btn active" onclick="toggleSidebar()"></i>
+      <i class="ph ph-magnifying-glass icon-btn"></i>
+      <i class="ph ph-git-branch icon-btn"></i>
+      <div style="flex:1"></div>
+      <i class="ph ph-puzzle-piece icon-btn"></i>
+    </div>
+
+    <div class="sidebar-panel" id="sidebar">
+      <div class="panel-header">
+        <span>Project Explorer</span>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <i class="ph ph-file-plus icon-btn-small" onclick="createNewFilePrompt()" title="New File" style="cursor:pointer; font-size: 14px; color: var(--text-dim); transition: color 0.2s;"></i>
+          <i class="ph ph-download-simple icon-btn-small" onclick="downloadActiveFile()" title="Download Active File" style="cursor:pointer; font-size: 14px; color: var(--text-dim); transition: color 0.2s;"></i>
+          <i class="ph ph-upload-simple icon-btn-small" onclick="triggerUpload()" title="Upload File" style="cursor:pointer; font-size: 14px; color: var(--text-dim); transition: color 0.2s;"></i>
+          <input type="file" id="file-upload-input" style="display:none;" onchange="handleFileUpload(event)">
+          <i class="ph ph-caret-double-left" onclick="toggleSidebar()" style="cursor:pointer; font-size: 14px; margin-left: 4px; color: var(--text-dim);"></i>
+        </div>
+      </div>
+      <div id="file-list-container" style="flex: 1; overflow-y: auto;">
+        <!-- File list rendered dynamically -->
+      </div>
+    </div>
+
+    <div class="editor-wrapper" style="position: relative;">
+      <!-- VS Code-style Command Input Palette -->
+      <div id="vscode-input-palette" class="vscode-palette" style="display: none; position: absolute; top: 0; left: 50%; transform: translateX(-50%) translateY(-20px); background: #202020; border: 1px solid #303030; border-radius: 6px; width: 450px; max-width: 90%; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); padding: 8px; transition: all 0.2s ease; opacity: 0; pointer-events: none;">
+        <div style="font-size: 11px; color: #858585; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;" id="vscode-palette-title">Create New File</div>
+        <input type="text" id="vscode-palette-input" style="width: 100%; background: #2d2d2d; border: 1px solid #3c3c3c; color: #cccccc; padding: 6px 10px; border-radius: 4px; font-size: 13px; outline: none; box-sizing: border-box;" placeholder="Filename (e.g. main.py)" onkeydown="handleVSCodePaletteKey(event)">
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+          <button onclick="closeVSCodePalette()" style="background: transparent; border: none; color: #858585; font-size: 12px; cursor: pointer; padding: 4px 8px;">Cancel</button>
+          <button id="vscode-palette-confirm-btn" style="background: #007acc; border: none; color: white; border-radius: 4px; padding: 4px 12px; font-size: 12px; cursor: pointer; font-weight: 500;">Confirm</button>
+        </div>
+      </div>
+
+      <div class="tabs-bar" id="tabs-container">
+        <!-- Tabs rendered dynamically -->
+      </div>
+
+      <div style="flex: 1; display: flex; position: relative; overflow: hidden;">
+        <div style="flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column;">
+          <textarea id="code"></textarea>
+        </div>
+        
+        <!-- Plot container (hidden by default) -->
+        <div id="plot-container" style="display: none; width: 40%; border-left: 1px solid var(--border); background: var(--bg-panel); flex-direction: column; overflow: hidden;">
+          <div class="panel-header" style="border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; height: 36px; box-sizing: border-box;">
+            <span>Matplotlib Plot Output</span>
+            <i class="ph ph-x" onclick="closePlotContainer()" style="cursor:pointer; font-size: 16px; color: var(--text-dim);"></i>
+          </div>
+          <div id="plot-output" style="flex: 1; padding: 12px; display: flex; justify-content: center; align-items: center; overflow: auto; background: var(--bg-main);">
+            <!-- Plot canvas will render here -->
+          </div>
+        </div>
+      </div>
+
+      <div class="terminal-panel">
+        <div class="terminal-header">
+          <span class="term-tab active" id="tab-terminal" onclick="switchTerminalTab('terminal')">Terminal</span>
+          <span class="term-tab" id="tab-console" onclick="switchTerminalTab('console')">Python Console</span>
+          <span class="term-tab" id="tab-problems" onclick="switchTerminalTab('problems')">Problems</span>
+          <div style="flex:1"></div>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <i class="ph ph-copy icon-btn-small" onclick="copyTerminalOutput()" title="Copy Output" style="cursor:pointer; font-size:14px; color:var(--text-dim); transition: color 0.2s;"></i>
+            <i class="ph ph-trash icon-btn-small" onclick="clearTerminalOutput()" title="Clear Output" style="cursor:pointer; font-size:14px; color:var(--text-dim); transition: color 0.2s;"></i>
+          </div>
+        </div>
+        <div id="output" style="flex: 1; overflow-y: auto;">
+          <span style="color: #57965c;">shipu@pc</span>:<span style="color: #3574f0;">~/project</span>$ Python environment loaded.<br>
+        </div>
+        <div id="console-input-container" style="display: none; padding: 6px 16px; border-top: 1px solid var(--border); align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; background: var(--bg-main);">
+          <span style="color: var(--accent); font-weight: bold;">>>></span>
+          <input type="text" id="console-input" style="flex: 1; background: transparent; border: none; outline: none; color: var(--text-main); font-family: inherit; font-size: inherit;" placeholder="Type Python command and press Enter..." onkeydown="handleConsoleInput(event)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer style="background: var(--accent); color: white; height: 22px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 11px;">
+    <div id="footer-status">🚀 Status: Ready</div>
+    <div id="footer-cursor">Ln 1, Col 1  |  UTF-8  |  Python 3.13</div>
+  </footer>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s ease;">
+    <div class="modal-content" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; width: 360px; max-width: 90%; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
+      <div class="modal-header" style="padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Editor Settings</h3>
+        <i class="ph ph-x" onclick="closeSettingsModal()" style="cursor: pointer; font-size: 18px; color: var(--text-dim);"></i>
+      </div>
+      <div class="modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="theme-select" style="font-size: 13px; color: var(--text-main);">Editor Theme</label>
+          <select id="theme-select" onchange="updateSetting('theme', this.value)" style="background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 5px 8px; border-radius: 4px; font-size: 12px; outline: none; cursor: pointer;">
+            <option value="darcula">Darcula</option>
+            <option value="monokai">Monokai</option>
+            <option value="material">Material</option>
+            <option value="eclipse">Eclipse (Light)</option>
+          </select>
+        </div>
+        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="font-size-select" style="font-size: 13px; color: var(--text-main);">Font Size</label>
+          <select id="font-size-select" onchange="updateSetting('fontSize', this.value)" style="background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 5px 8px; border-radius: 4px; font-size: 12px; outline: none; cursor: pointer;">
+            <option value="12px">12px</option>
+            <option value="14px">14px</option>
+            <option value="16px">16px</option>
+            <option value="18px">18px</option>
+            <option value="20px">20px</option>
+          </select>
+        </div>
+        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="wordwrap-toggle" style="font-size: 13px; color: var(--text-main);">Word Wrap</label>
+          <input type="checkbox" id="wordwrap-toggle" onchange="updateSetting('lineWrapping', this.checked)" style="cursor: pointer;">
+        </div>
+        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="closebrackets-toggle" style="font-size: 13px; color: var(--text-main);">Auto Close Brackets</label>
+          <input type="checkbox" id="closebrackets-toggle" onchange="updateSetting('autoCloseBrackets', this.checked)" style="cursor: pointer;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/closebrackets.min.js"></script>
+
+  <script src="pce.js"></script>
+</body>
+</html>
