@@ -12,8 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
-    <link rel="stylesheet" href="app/current_version/ai6.css">
-    <link rel="manifest" href="app/current_version/manifest.json">
+    <link rel="stylesheet" href="current_version/ai6.css">
+    <link rel="manifest" href="current_version/manifest.json">
     <meta name="theme-color" content="#131314">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -310,7 +310,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./app/current_version/sw.js')
+                navigator.serviceWorker.register('./current_version/sw.js')
                     .then(reg => console.log('Service Worker registered'))
                     .catch(err => console.log('Service Worker failed', err));
             });
