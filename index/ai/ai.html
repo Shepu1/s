@@ -49,43 +49,119 @@
         </div>
     </div>
 
-    <div id="installModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 450px;">
-            <div class="modal-icon" style="color: #38ef7d;"><i class="fas fa-download"></i></div>
-            <h3>How to Install Shepu-AI?</h3>
-            <p style="text-align: left; font-size: 14px; margin-bottom: 20px;">
-                ১. এই PWA অ্যাপটি সরাসরি ব্রাউজার থেকে ইনস্টল করতে সাইটটি অবশ্যই লোকালহোস্ট বা HTTPS সার্ভারে চলতে হবে (যেমন Live Server)। সরাসরি ফাইলে ডাবল-ক্লিক করে ওপেন করলে সরাসরি ইনস্টল বাটন কাজ করবে না।<br><br>
-                ২. <strong>ক্রোম/এজ ব্রাউজারে ইনস্টল করতে:</strong> ব্রাউজারের উপরে ডানদিকের থ্রি-ডট (Three-dot) মেনুতে ক্লিক করে <strong>"Install Shepu-AI"</strong> বা <strong>"Save and share -> Install App"</strong> এ ক্লিক করুন।<br><br>
-                ৩. <strong>মোবাইলে ইনস্টল করতে:</strong> ব্রাউজারের থ্রি-ডট মেনু থেকে <strong>"Add to Home screen"</strong> এ ক্লিক করুন।
-            </p>
-            <div class="modal-actions">
-                <button class="modal-btn cancel" onclick="closeInstallModal()" style="background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff;">ঠিক আছে</button>
+
+
+
+
+    <!-- Floating Toast Notification -->
+    <div class="toast-notification" id="toastNotification">
+        <i class="fas fa-check-circle" id="toastIcon"></i>
+        <span id="toastMessage">Action completed successfully</span>
+    </div>
+
+    <!-- Fullscreen Image Lightbox Modal -->
+    <div id="imageLightboxModal" class="image-lightbox-modal" onclick="closeImageLightbox(event)">
+        <div class="lightbox-header" onclick="event.stopPropagation()">
+            <span class="lightbox-title" id="lightboxTitle"><i class="fas fa-wand-magic-sparkles"></i> Shepu-AI(SSv1.0) Image Preview</span>
+            <div class="lightbox-actions">
+                <button class="lightbox-btn" id="lightboxDownloadBtn" title="Download Image"><i class="fas fa-download"></i> Download</button>
+                <button class="lightbox-btn" onclick="closeImageLightbox()" title="Close"><i class="fas fa-times"></i></button>
             </div>
+        </div>
+        <div class="lightbox-body" onclick="event.stopPropagation()">
+            <div class="lightbox-img-wrapper">
+                <img id="lightboxImg" src="" alt="Enlarged Image" />
+                <div class="image-watermark">Shepu-AI</div>
+            </div>
+            <div class="lightbox-prompt" id="lightboxPrompt"></div>
         </div>
     </div>
 
     <div class="sidebar" id="sidebar">
-        <button class="new-chat-btn" onclick="location.reload()">
+        <button class="new-chat-btn" onclick="createNewChat()">
             <i class="fas fa-plus"></i> New Chat
         </button>
-        <button class="new-chat-btn install-btn" id="installBtn" style="margin-top: -10px; margin-bottom: 20px;">
-            <i class="fas fa-download"></i> Install App
-        </button>
         <div class="history-list" id="historyList"></div>
+        
+        <!-- Main Conversation Button -->
         <div class="sidebar-footer" id="startConversationBtn" onclick="startSmartConversation()">
             <i class="fas fa-comments"></i> কথোপকথন শুরু করুন
         </div>
-        <div class="sidebar-footer theme-dropdown-container">
-            <i class="fas fa-palette"></i>
-            <select id="themeSelector" onchange="changeTheme(this.value)">
-                <option value="dark-mode">Dark Theme</option>
-                <option value="light-mode">Light Theme</option>
-                <option value="hacking-mode">Hacking Theme</option>
-            </select>
+
+        <!-- Settings Accordion Dropdown -->
+        <div class="sidebar-footer theme-select-item" id="settingsBtn" onclick="toggleSettingsDropdown(event)">
+            <div class="theme-btn-header">
+                <span><i class="fas fa-cog"></i> Settings</span>
+                <i class="fas fa-chevron-down theme-arrow-icon" id="settingsArrowIcon"></i>
+            </div>
+            <div class="custom-theme-dropdown" id="customSettingsDropdown" onclick="event.stopPropagation()">
+                <div class="settings-dropdown-content">
+                    <!-- Network Status -->
+                    <div class="settings-item" id="networkStatusBtn">
+                        <i class="fas fa-wifi" id="networkStatusIcon"></i>
+                        <span class="status-text" id="networkStatusText">Online</span>
+                    </div>
+
+                    <!-- Train AI -->
+                    <div class="settings-item" id="trainAiBtn" onclick="openTrainAiPage()">
+                        <i class="fas fa-brain"></i>
+                        <span>Train AI</span>
+                    </div>
+
+                    <!-- Theme Change Accordion -->
+                    <div class="settings-item sub-accordion" id="themeSelectBtn" onclick="toggleThemeSubDropdown(event)">
+                        <div class="settings-item-header">
+                            <span><i class="fas fa-palette"></i> থিম পরিবর্তন করুন</span>
+                            <i class="fas fa-chevron-down theme-arrow-icon" id="themeArrowIcon"></i>
+                        </div>
+                        <div class="sub-dropdown-menu" id="customThemeDropdown">
+                            <div class="custom-theme-option" id="themeOpt-dark-mode" onclick="applyCustomTheme('dark-mode', event)">
+                                <span class="theme-dot dark"></span> Dark Theme
+                                <i class="fas fa-check t-check"></i>
+                            </div>
+                            <div class="custom-theme-option" id="themeOpt-light-mode" onclick="applyCustomTheme('light-mode', event)">
+                                <span class="theme-dot light"></span> Light Theme
+                                <i class="fas fa-check t-check"></i>
+                            </div>
+                            <div class="custom-theme-option" id="themeOpt-hacking-mode" onclick="applyCustomTheme('hacking-mode', event)">
+                                <span class="theme-dot hacking"></span> Hacking Theme
+                                <i class="fas fa-check t-check"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Edit Accordion -->
+                    <div class="settings-item sub-accordion" id="profileEditBtn" onclick="toggleProfileSubDropdown(event)">
+                        <div class="settings-item-header">
+                            <span><i class="fas fa-user-edit"></i> <span id="profileMainBtnText">Edit Your Profile</span></span>
+                            <i class="fas fa-chevron-down theme-arrow-icon" id="profileArrowIcon"></i>
+                        </div>
+                        <div class="sub-dropdown-menu" id="customProfileDropdown">
+                            <div class="profile-dropdown-content">
+                                <div class="profile-dropdown-option" onclick="triggerProfilePictureUpload()">
+                                    <i class="fas fa-camera"></i>
+                                    <span id="profilePhotoOptText">Upload Profile Picture</span>
+                                </div>
+                                <div class="profile-name-container">
+                                    <label class="profile-input-label"><i class="fas fa-id-card"></i> Your Name:</label>
+                                    <div class="profile-name-input-group">
+                                        <input type="text" id="userNameInput" placeholder="Enter your name..." autocomplete="off">
+                                        <button type="button" class="profile-save-name-btn" onclick="saveUserName(event)">Save</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clear History -->
+                    <div class="settings-item danger-item" onclick="clearHistory()">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Clear All History</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="sidebar-footer" onclick="clearHistory()">
-            <i class="fas fa-trash-alt"></i> Clear All History
-        </div>
+        <input type="file" id="userAvatarInput" accept="image/*" style="display: none;" onchange="handleProfilePictureUpload(event)">
     </div>
     <div class="main-content" id="mainContent">
         <div class="top-bar">
@@ -98,15 +174,33 @@
                 </button>
                 <div class="model-name">
                     <i class="fas fa-sparkles"></i> Shepu-AI
-                    <select id="versionSelector" onchange="changeVersion(this)">
-                        <option value="ai.html" selected>v4.0 (Pro Assistant)</option>
-                        <option value="app/old_versions/ai5.html">v3.1 (Pro Assistant)</option>
-                        <option value="app/old_versions/ai4.html">v3.0 (Pro)</option>
-                        <option value="app/old_versions/ai3.html">v2.1 (Smart+)</option>
-                        <option value="app/old_versions/ai2.html">v2.0 (Smart)</option>
-                        <option value="app/old_versions/ai1.html">v1.0 (Classic)</option>
-                    </select>
-                    <span style="font-size: 12px; margin-left: 5px; opacity: 0.6;">v4.0 Pro</span>
+                    <div class="version-select-wrapper" id="versionSelectBtn" onclick="toggleVersionDropdown(event)">
+                        <i class="fas fa-cog version-gear-icon" id="versionGearIcon"></i>
+                        <span class="version-current-text">v4.0 Standard</span>
+                        <i class="fas fa-chevron-down version-arrow-icon" id="versionArrowIcon"></i>
+                        
+                        <div class="custom-version-dropdown" id="customVersionDropdown">
+                            <div class="custom-version-item active" onclick="switchToVersion('ai.html', event)">
+                                <span>v4.0 Standard</span>
+                                <i class="fas fa-check v-check"></i>
+                            </div>
+                            <div class="custom-version-item" onclick="switchToVersion('app/old_versions/ai5.html', event)">
+                                <span>v3.1 Standard</span>
+                            </div>
+                            <div class="custom-version-item" onclick="switchToVersion('app/old_versions/ai4.html', event)">
+                                <span>v3.0 Pro</span>
+                            </div>
+                            <div class="custom-version-item" onclick="switchToVersion('app/old_versions/ai3.html', event)">
+                                <span>v2.1 Standard</span>
+                            </div>
+                            <div class="custom-version-item" onclick="switchToVersion('app/old_versions/ai2.html', event)">
+                                <span>v2.0 Smart</span>
+                            </div>
+                            <div class="custom-version-item" onclick="switchToVersion('app/old_versions/ai1.html', event)">
+                                <span>v1.0 Classic</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,15 +225,80 @@
                 </div>
             </div>
         </div>
+        <!-- Dedicated Train AI View Container -->
+        <div class="train-ai-container" id="trainAiContainer" style="display: none;">
+            <div class="train-ai-inner">
+                <div class="train-ai-header">
+                    <div class="train-header-title">
+                        <i class="fas fa-brain"></i>
+                        <h2>Train Your Shepu-AI</h2>
+                    </div>
+                    <p>আপনার ব্যক্তিগত প্রশ্ন ও উত্তর যুক্ত করুন। এই তথ্য ১০০% আপনার ডিভাইসেই সুরক্ষিত থাকবে এবং কোনো এপিআই বা সার্ভারে যাবে না।</p>
+                </div>
+
+                <div class="train-ai-card">
+                    <h3><i class="fas fa-plus-circle"></i> নতুন জ্ঞান যুক্ত করুন (Add Knowledge)</h3>
+                    <div class="train-input-group">
+                        <label for="customQuestionInput"><i class="fas fa-question-circle"></i> প্রশ্ন (Question):</label>
+                        <input type="text" id="customQuestionInput" placeholder="যেমন: তোমার প্রিয় কাজ কি?" autocomplete="off">
+                    </div>
+                    <div class="train-input-group">
+                        <label for="customAnswerInput"><i class="fas fa-comment-dots"></i> উত্তর (Answer):</label>
+                        <textarea id="customAnswerInput" placeholder="যেমন: মানুষের নতুন সমস্যার সমাধান করা!" rows="3"></textarea>
+                    </div>
+                    <button class="train-save-btn" onclick="saveCustomTrainPair()">
+                        <i class="fas fa-save"></i> Save Training Data
+                    </button>
+                </div>
+
+                <div class="trained-knowledge-section">
+                    <div class="trained-section-header">
+                        <h3><i class="fas fa-database"></i> আপনার সেভ করা ট্রেন ডেটা</h3>
+                        <span class="trained-count-badge" id="trainedCountBadge">0 pairs</span>
+                    </div>
+                    <div class="trained-list" id="trainedList">
+                        <!-- Dynamic Trained QA items -->
+                    </div>
+                </div>
+            </div>
+        </div>
         <button class="scroll-to-bottom" id="scrollToBottom" onclick="scrollToBottom()">
             <i class="fas fa-arrow-down"></i>
         </button>
         <div class="input-wrapper">
             <div id="suggestionBox"></div>
             <div class="input-box">
-                <button class="action-btn" id="voiceBtn"><i class="fas fa-microphone"></i></button>
+                <div class="plus-menu-container">
+                    <button class="action-btn" id="plusMenuBtn" type="button" onclick="togglePlusMenu(event)" title="Options">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <div class="plus-dropdown-menu" id="plusDropdownMenu">
+                        <div class="plus-menu-item" id="menuOptImage" onclick="selectPlusOption('image', event)">
+                            <div class="plus-item-icon image-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+                            <div class="plus-item-info">
+                                <span class="plus-item-title">ছবি তৈরি করুন</span>
+                                <span class="plus-item-desc">Shepu-AI(SSv1.0) আল্ট্রা এইচডি</span>
+                            </div>
+                        </div>
+                        <div class="plus-menu-item" id="menuOptRegular" onclick="selectPlusOption('regular', event)">
+                            <div class="plus-item-icon regular-icon"><i class="fas fa-comment-dots"></i></div>
+                            <div class="plus-item-info">
+                                <span class="plus-item-title">সাধারণ চ্যাট</span>
+                                <span class="plus-item-desc">টেক্সট কথোপকথন মোড</span>
+                            </div>
+                        </div>
+                        <div class="plus-menu-item" id="menuOptConversation" onclick="selectPlusOption('conversation', event)">
+                            <div class="plus-item-icon chat-icon"><i class="fas fa-comments"></i></div>
+                            <div class="plus-item-info">
+                                <span class="plus-item-title">কথোপকথন শুরু করুন</span>
+                                <span class="plus-item-desc">স্মার্ট কথোপকথন ফিচার</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="action-btn" id="voiceBtn" type="button"><i class="fas fa-microphone"></i></button>
                 <textarea id="userInput" placeholder="Ask anything..." rows="1"></textarea>
-                <button class="action-btn send-btn" id="sendBtn" onclick="sendMessage()"><i
+                <button class="action-btn send-btn" id="sendBtn" type="button" onclick="sendMessage()"><i
                         class="fas fa-paper-plane"></i></button>
             </div>
             <div style="text-align: center; font-size: 11px; margin-top: 8px; color: #555;">Shepu-AI is an experimental
