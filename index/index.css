@@ -784,7 +784,7 @@ nav ul#nav-links { order: 2; margin-left: auto; }
     100% { width: 200%; height: 200%; opacity: 0; }
 }
 
-/* Fixed cinematic frame background for the whole site */
+/* Fixed cinematic background for the whole site */
 .site-bg {
     position: fixed;
     inset: 0;
@@ -792,12 +792,36 @@ nav ul#nav-links { order: 2; margin-left: auto; }
     pointer-events: none;
     background: #0c0c0f;
 }
-.site-bg-canvas {
+.site-bg-canvas,
+.site-bg-video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     display: block;
+    background: #0c0c0f;
+}
+.site-bg-video {
+    object-fit: cover;
+    object-position: center center;
+    /* Desktop: frames via canvas. Phone: single mp4 (JPG sequence stalls on mobile) */
+    opacity: 0;
+    visibility: hidden;
+}
+.site-bg-canvas {
+    opacity: 1;
+    visibility: visible;
+}
+@media (max-width: 768px) {
+    .site-bg-video {
+        opacity: 1;
+        visibility: visible;
+        object-position: 88% center;
+    }
+    .site-bg-canvas {
+        opacity: 0;
+        visibility: hidden;
+    }
 }
 .site-bg-veil {
     position: absolute;
