@@ -258,6 +258,244 @@ function updateScrollSpy() {
     });
 }
 
+// ==========================================
+// Site-wide scroll-scrubbed FRAME background
+// (JPG sequence is smoother than MP4 seek; video kept as source asset)
+// ==========================================
+
+const TOTAL_FRAMES = 192;
+const FRAME_DIR = "index/home/portfolio_frames_24fps";
+const FRAME_CONCURRENCY = 10;
+const PRELOAD_RADIUS = 36;
+const SCRUB_LERP = 0.22;
+
+function frameUrl(index) {
+    return `${FRAME_DIR}/frame_${String(index + 1).padStart(4, "0")}.jpg`;
+}
+
+function createScrollFrameEngine() {
+    const canvas = document.getElementById("site-bg-canvas");
+    if (!canvas) return { sync() {}, destroy() {} };
+
+    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+    const images = new Array(TOTAL_FRAMES);
+    const status = new Array(TOTAL_FRAMES).fill(0);
+    const queue = [];
+
+    let activeLoads = 0;
+    let targetProgress = 0;
+    let renderProgress = 0;
+    let drawnIndex = -1;
+    let rafId = 0;
+    let resizeRaf = 0;
+    let destroyed = false;
+    let idleLoadCursor = 0;
+
+    const isMobile = window.matchMedia("(max-width: 768px)").matches
+        || /Mobi|Android/i.test(navigator.userAgent);
+    const saveData = !!(navigator.connection && navigator.connection.saveData);
+
+    function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+        const w = Math.max(1, Math.round(window.innerWidth * dpr));
+        const h = Math.max(1, Math.round(window.innerHeight * dpr));
+        if (canvas.width !== w || canvas.height !== h) {
+            canvas.width = w;
+            canvas.height = h;
+            drawnIndex = -1;
+        }
+    }
+
+    function drawCover(img) {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const ir = img.naturalWidth / img.naturalHeight;
+        const cr = cw / ch;
+        const alignRight = window.matchMedia("(max-width: 768px)").matches;
+        let dw;
+        let dh;
+        let dx;
+        let dy;
+        if (ir > cr) {
+            dh = ch;
+            dw = ch * ir;
+            dx = alignRight ? (cw - dw) : (cw - dw) * 0.5;
+            dy = 0;
+        } else {
+            dw = cw;
+            dh = cw / ir;
+            dx = 0;
+            dy = (ch - dh) * 0.5;
+        }
+        ctx.fillStyle = "#0c0c0f";
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(img, dx, dy, dw, dh);
+    }
+
+    function nearestReady(index) {
+        if (status[index] === 2) return index;
+        for (let d = 1; d < TOTAL_FRAMES; d++) {
+            const a = index - d;
+            const b = index + d;
+            if (a >= 0 && status[a] === 2) return a;
+            if (b < TOTAL_FRAMES && status[b] === 2) return b;
+        }
+        return -1;
+    }
+
+    function paint(index) {
+        const ready = nearestReady(index);
+        if (ready < 0) return;
+        if (ready === drawnIndex) return;
+        drawCover(images[ready]);
+        drawnIndex = ready;
+    }
+
+    function pumpQueue() {
+        while (activeLoads < FRAME_CONCURRENCY && queue.length) {
+            const index = queue.shift();
+            if (status[index] !== 0) continue;
+            status[index] = 1;
+            activeLoads++;
+            const img = new Image();
+            img.decoding = "async";
+            img.onload = () => {
+                images[index] = img;
+                status[index] = 2;
+                activeLoads--;
+                const want = Math.round(renderProgress * (TOTAL_FRAMES - 1));
+                if (index === want || drawnIndex < 0) {
+                    drawnIndex = -1;
+                    paint(want);
+                }
+                pumpQueue();
+            };
+            img.onerror = () => {
+                status[index] = 3;
+                activeLoads--;
+                pumpQueue();
+            };
+            img.src = frameUrl(index);
+        }
+    }
+
+    function enqueue(index, front) {
+        if (index < 0 || index >= TOTAL_FRAMES || status[index] !== 0) return;
+        if (front) queue.unshift(index);
+        else queue.push(index);
+        pumpQueue();
+    }
+
+    function prioritizeAround(center) {
+        enqueue(center, true);
+        const radius = saveData ? 12 : PRELOAD_RADIUS;
+        for (let d = 1; d <= radius; d++) {
+            enqueue(center + d, false);
+            enqueue(center - d, false);
+        }
+    }
+
+    function scheduleIdleFill() {
+        // Full reel warm-up on desktop only — keeps mobile lighter
+        if (isMobile || saveData || prefersReducedMotion) return;
+        const step = () => {
+            if (destroyed) return;
+            let n = 0;
+            while (idleLoadCursor < TOTAL_FRAMES && n < 6) {
+                if (status[idleLoadCursor] === 0) {
+                    enqueue(idleLoadCursor, false);
+                    n++;
+                }
+                idleLoadCursor++;
+            }
+            if (idleLoadCursor < TOTAL_FRAMES) {
+                if ("requestIdleCallback" in window) {
+                    requestIdleCallback(step, { timeout: 900 });
+                } else {
+                    setTimeout(step, 80);
+                }
+            }
+        };
+        if ("requestIdleCallback" in window) {
+            requestIdleCallback(step, { timeout: 600 });
+        } else {
+            setTimeout(step, 150);
+        }
+    }
+
+    function readPageProgress() {
+        const total = document.documentElement.scrollHeight - window.innerHeight;
+        if (total <= 0) return 0;
+        return Math.min(1, Math.max(0, window.scrollY / total));
+    }
+
+    function tick() {
+        rafId = 0;
+        if (destroyed) return;
+
+        const lerp = prefersReducedMotion ? 1 : SCRUB_LERP;
+        renderProgress += (targetProgress - renderProgress) * lerp;
+        if (Math.abs(targetProgress - renderProgress) < 0.0003) {
+            renderProgress = targetProgress;
+        }
+
+        const frameIndex = Math.min(
+            TOTAL_FRAMES - 1,
+            Math.max(0, Math.round(renderProgress * (TOTAL_FRAMES - 1)))
+        );
+
+        prioritizeAround(frameIndex);
+        paint(frameIndex);
+
+        if (renderProgress !== targetProgress) {
+            rafId = requestAnimationFrame(tick);
+        }
+    }
+
+    function kick() {
+        if (destroyed) return;
+        targetProgress = prefersReducedMotion ? 0 : readPageProgress();
+        if (!rafId) rafId = requestAnimationFrame(tick);
+    }
+
+    function onResize() {
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(() => {
+            resizeCanvas();
+            drawnIndex = -1;
+            kick();
+        });
+    }
+
+    resizeCanvas();
+    enqueue(0, true);
+    for (let i = 1; i < 20; i++) enqueue(i, false);
+    scheduleIdleFill();
+    kick();
+
+    window.addEventListener("scroll", kick, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", onResize, { passive: true });
+    }
+
+    return {
+        sync: kick,
+        destroy() {
+            destroyed = true;
+            cancelAnimationFrame(rafId);
+            window.removeEventListener("scroll", kick);
+            window.removeEventListener("resize", onResize);
+        }
+    };
+}
+
+let heroFrameEngine = null;
+
+function updateHeroFrame() {
+    if (heroFrameEngine) heroFrameEngine.sync();
+}
+
 function initScrollHandlers() {
     const backToTop = document.getElementById("back-to-top");
     window.addEventListener("scroll", () => {
@@ -437,5 +675,6 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
 
+heroFrameEngine = createScrollFrameEngine();
 initScrollHandlers();
 typeWriter();
