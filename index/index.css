@@ -787,10 +787,17 @@ nav ul#nav-links { order: 2; margin-left: auto; }
 /* Fixed cinematic background for the whole site */
 .site-bg {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* lvh = largest viewport — stops URL-bar show/hide from "zooming" the cover crop */
+    height: 100vh;
+    height: 100lvh;
+    min-height: 100vh;
     z-index: 0;
     pointer-events: none;
     background: #0c0c0f;
+    overflow: hidden;
 }
 .site-bg-canvas,
 .site-bg-video {
