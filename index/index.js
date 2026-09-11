@@ -259,14 +259,15 @@ function updateScrollSpy() {
 }
 
 // ==========================================
-// Site-wide scroll-scrubbed FRAME background
-// (JPG sequence is smoother than MP4 seek; video kept as source asset)
+// Site-wide scroll-scrubbed background
+// Desktop = JPG frames (smooth)
+// Phone  = animation.mp4 (JPG sequence stalls on mobile networks)
+// Progress = scrollY + touch-drag (fixes iOS/Android scroll sampling)
 // ==========================================
 
 const TOTAL_FRAMES = 192;
 const FRAME_DIR = new URL("index/home/portfolio_frames_24fps/", window.location.href).href;
-const FRAME_CONCURRENCY_DESKTOP = 10;
-const FRAME_CONCURRENCY_MOBILE = 6;
+const FRAME_CONCURRENCY = 10;
 const PRELOAD_RADIUS = 36;
 const SCRUB_LERP = 0.22;
 
@@ -274,17 +275,93 @@ function frameUrl(index) {
     return `${FRAME_DIR}frame_${String(index + 1).padStart(4, "0")}.jpg`;
 }
 
-function createScrollFrameEngine() {
+function clamp01(n) {
+    return Math.min(1, Math.max(0, n));
+}
+
+function getScrollY() {
+    const se = document.scrollingElement || document.documentElement;
+    return se.scrollTop || window.pageYOffset || document.body.scrollTop || 0;
+}
+
+function getScrollMax() {
+    const se = document.scrollingElement || document.documentElement;
+    const height = Math.max(
+        se.scrollHeight || 0,
+        document.documentElement.scrollHeight || 0,
+        document.body.scrollHeight || 0
+    );
+    const view = window.innerHeight || document.documentElement.clientHeight || 1;
+    return Math.max(1, height - view);
+}
+
+function readScrollProgress() {
+    return clamp01(getScrollY() / getScrollMax());
+}
+
+function createProgressDriver() {
+    let touching = false;
+    let touchOriginY = 0;
+    let touchOriginProgress = 0;
+    let touchProgress = 0;
+    let coastUntil = 0;
+
+    function getProgress() {
+        const scrollP = readScrollProgress();
+        if (touching) {
+            // Finger drag always works even when scrollY is laggy on mobile
+            return touchProgress;
+        }
+        return scrollP;
+    }
+
+    function onTouchStart(e) {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        touching = true;
+        touchOriginY = t.clientY;
+        touchOriginProgress = readScrollProgress();
+        touchProgress = touchOriginProgress;
+        coastUntil = performance.now() + 3000;
+    }
+
+    function onTouchMove(e) {
+        const t = e.touches && e.touches[0];
+        if (!t || !touching) return;
+        const range = Math.max(getScrollMax(), window.innerHeight * 1.35);
+        const dy = touchOriginY - t.clientY; // finger up => page down => progress up
+        touchProgress = clamp01(touchOriginProgress + dy / range);
+        coastUntil = performance.now() + 3000;
+    }
+
+    function onTouchEnd() {
+        touching = false;
+        coastUntil = performance.now() + 2200;
+    }
+
+    return {
+        getProgress,
+        isTouching: () => touching,
+        coastActive: () => performance.now() < coastUntil,
+        bind(kick) {
+            window.addEventListener("scroll", kick, { passive: true, capture: true });
+            document.addEventListener("scroll", kick, { passive: true, capture: true });
+            window.addEventListener("touchstart", (e) => { onTouchStart(e); kick(); }, { passive: true, capture: true });
+            window.addEventListener("touchmove", (e) => { onTouchMove(e); kick(); }, { passive: true, capture: true });
+            window.addEventListener("touchend", () => { onTouchEnd(); kick(); }, { passive: true, capture: true });
+            window.addEventListener("touchcancel", () => { onTouchEnd(); kick(); }, { passive: true, capture: true });
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener("scroll", kick, { passive: true });
+            }
+        }
+    };
+}
+
+function createDesktopFrameEngine(progressDriver) {
     const canvas = document.getElementById("site-bg-canvas");
     if (!canvas) return { sync() {}, destroy() {} };
 
-    const isMobile = window.matchMedia("(max-width: 768px)").matches
-        || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const saveData = !!(navigator.connection && navigator.connection.saveData);
-    const concurrency = isMobile ? FRAME_CONCURRENCY_MOBILE : FRAME_CONCURRENCY_DESKTOP;
-
-    // desynchronized can blank the canvas on some mobile GPUs
-    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: !isMobile });
+    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
     const images = new Array(TOTAL_FRAMES);
     const status = new Array(TOTAL_FRAMES).fill(0);
     const queued = new Set();
@@ -299,11 +376,9 @@ function createScrollFrameEngine() {
     let resizeRaf = 0;
     let destroyed = false;
     let idleLoadCursor = 0;
-    let touching = false;
-    let coastUntil = 0;
 
     function resizeCanvas() {
-        const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const w = Math.max(1, Math.round(window.innerWidth * dpr));
         const h = Math.max(1, Math.round(window.innerHeight * dpr));
         if (canvas.width !== w || canvas.height !== h) {
@@ -319,8 +394,6 @@ function createScrollFrameEngine() {
         if (!cw || !ch || !img) return;
         const ir = img.naturalWidth / img.naturalHeight;
         const cr = cw / ch;
-        const mobile = window.matchMedia("(max-width: 768px)").matches;
-        const xAnchor = mobile ? 0.88 : 0.5;
         let dw;
         let dh;
         let dx;
@@ -328,7 +401,7 @@ function createScrollFrameEngine() {
         if (ir > cr) {
             dh = ch;
             dw = ch * ir;
-            dx = (cw - dw) * xAnchor;
+            dx = (cw - dw) * 0.5;
             dy = 0;
         } else {
             dw = cw;
@@ -361,7 +434,7 @@ function createScrollFrameEngine() {
     }
 
     function pumpQueue() {
-        while (activeLoads < concurrency && queue.length) {
+        while (activeLoads < FRAME_CONCURRENCY && queue.length) {
             const index = queue.shift();
             queued.delete(index);
             if (status[index] !== 0) continue;
@@ -373,7 +446,7 @@ function createScrollFrameEngine() {
                 images[index] = img;
                 status[index] = 2;
                 activeLoads--;
-                if (index === wantIndex || Math.abs(index - wantIndex) <= 1 || drawnIndex < 0) {
+                if (index === wantIndex || drawnIndex < 0) {
                     drawnIndex = -1;
                     paint(wantIndex);
                 }
@@ -399,20 +472,17 @@ function createScrollFrameEngine() {
 
     function prioritizeAround(center) {
         enqueue(center, true);
-        const radius = saveData ? 18 : (isMobile ? 48 : PRELOAD_RADIUS);
-        for (let d = 1; d <= radius; d++) {
-            enqueue(center + d, d <= 8);
-            enqueue(center - d, d <= 8);
+        for (let d = 1; d <= PRELOAD_RADIUS; d++) {
+            enqueue(center + d, d <= 6);
+            enqueue(center - d, d <= 6);
         }
     }
 
     function scheduleIdleFill() {
-        if (saveData || prefersReducedMotion) return;
-        const batch = isMobile ? 4 : 6;
         const step = () => {
             if (destroyed) return;
             let n = 0;
-            while (idleLoadCursor < TOTAL_FRAMES && n < batch) {
+            while (idleLoadCursor < TOTAL_FRAMES && n < 6) {
                 if (status[idleLoadCursor] === 0) {
                     enqueue(idleLoadCursor, false);
                     n++;
@@ -420,97 +490,37 @@ function createScrollFrameEngine() {
                 idleLoadCursor++;
             }
             if (idleLoadCursor < TOTAL_FRAMES) {
-                if ("requestIdleCallback" in window) {
-                    requestIdleCallback(step, { timeout: 700 });
-                } else {
-                    setTimeout(step, isMobile ? 90 : 70);
-                }
+                if ("requestIdleCallback" in window) requestIdleCallback(step, { timeout: 800 });
+                else setTimeout(step, 70);
             }
         };
-        setTimeout(step, 100);
-    }
-
-    function getScrollY() {
-        const se = document.scrollingElement || document.documentElement;
-        const y = se.scrollTop;
-        if (y || y === 0) return y;
-        return window.pageYOffset || document.body.scrollTop || 0;
-    }
-
-    function getScrollMax() {
-        const se = document.scrollingElement || document.documentElement;
-        const height = Math.max(
-            se.scrollHeight || 0,
-            document.documentElement.scrollHeight || 0,
-            document.body.scrollHeight || 0,
-            document.documentElement.offsetHeight || 0,
-            document.body.offsetHeight || 0
-        );
-        const view = window.innerHeight || document.documentElement.clientHeight || 1;
-        return Math.max(1, height - view);
-    }
-
-    function readPageProgress() {
-        return Math.min(1, Math.max(0, getScrollY() / getScrollMax()));
+        setTimeout(step, 120);
     }
 
     function tick() {
         rafId = 0;
         if (destroyed) return;
 
-        targetProgress = prefersReducedMotion ? 0 : readPageProgress();
+        targetProgress = progressDriver.getProgress();
+        renderProgress += (targetProgress - renderProgress) * SCRUB_LERP;
+        if (Math.abs(targetProgress - renderProgress) < 0.00025) renderProgress = targetProgress;
 
-        // Mobile: snap hard so frame changes track the finger immediately
-        if (prefersReducedMotion || isMobile) {
-            renderProgress = targetProgress;
-        } else {
-            renderProgress += (targetProgress - renderProgress) * SCRUB_LERP;
-            if (Math.abs(targetProgress - renderProgress) < 0.00025) {
-                renderProgress = targetProgress;
-            }
-        }
-
-        wantIndex = Math.min(
-            TOTAL_FRAMES - 1,
-            Math.max(0, Math.round(renderProgress * (TOTAL_FRAMES - 1)))
-        );
-
+        wantIndex = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(renderProgress * (TOTAL_FRAMES - 1))));
         prioritizeAround(wantIndex);
         paint(wantIndex);
 
-        const now = performance.now();
-        const keepGoing = isMobile
-            || touching
-            || now < coastUntil
-            || renderProgress !== targetProgress;
-
-        if (keepGoing) {
+        if (
+            progressDriver.isTouching()
+            || progressDriver.coastActive()
+            || renderProgress !== targetProgress
+        ) {
             rafId = requestAnimationFrame(tick);
         }
     }
 
     function kick() {
         if (destroyed) return;
-        if (isMobile) coastUntil = performance.now() + 1800;
         if (!rafId) rafId = requestAnimationFrame(tick);
-    }
-
-    function onTouchStart() {
-        touching = true;
-        coastUntil = performance.now() + 3000;
-        kick();
-    }
-
-    function onTouchMove() {
-        touching = true;
-        coastUntil = performance.now() + 3000;
-        kick();
-    }
-
-    function onTouchEnd() {
-        touching = false;
-        coastUntil = performance.now() + 2500;
-        kick();
     }
 
     function onResize() {
@@ -524,49 +534,142 @@ function createScrollFrameEngine() {
 
     resizeCanvas();
     enqueue(0, true);
-    for (let i = 1; i < (isMobile ? 40 : 24); i++) enqueue(i, false);
+    for (let i = 1; i < 24; i++) enqueue(i, false);
     scheduleIdleFill();
-    kick();
-
-    // Capture helps some mobile browsers deliver scroll during touch
-    window.addEventListener("scroll", kick, { passive: true, capture: true });
-    document.addEventListener("scroll", kick, { passive: true, capture: true });
-    window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true, capture: true });
-    window.addEventListener("touchend", onTouchEnd, { passive: true, capture: true });
-    window.addEventListener("touchcancel", onTouchEnd, { passive: true, capture: true });
-    window.addEventListener("pointerdown", onTouchStart, { passive: true });
-    window.addEventListener("pointermove", (e) => {
-        if (e.pointerType === "touch") onTouchMove();
-    }, { passive: true });
-    window.addEventListener("pointerup", onTouchEnd, { passive: true });
+    progressDriver.bind(kick);
     window.addEventListener("resize", onResize, { passive: true });
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", onResize, { passive: true });
-        window.visualViewport.addEventListener("scroll", kick, { passive: true });
-    }
-
-    // Mobile: never let the loop die while the tab is visible
-    if (isMobile) {
-        document.addEventListener("visibilitychange", () => {
-            if (!document.hidden) kick();
-        });
-    }
+    kick();
 
     return {
         sync: kick,
         destroy() {
             destroyed = true;
             cancelAnimationFrame(rafId);
-            window.removeEventListener("scroll", kick, true);
-            document.removeEventListener("scroll", kick, true);
-            window.removeEventListener("touchstart", onTouchStart, true);
-            window.removeEventListener("touchmove", onTouchMove, true);
-            window.removeEventListener("touchend", onTouchEnd, true);
-            window.removeEventListener("touchcancel", onTouchEnd, true);
             window.removeEventListener("resize", onResize);
         }
     };
+}
+
+function createMobileVideoEngine(progressDriver) {
+    const video = document.getElementById("site-bg-video");
+    if (!video) return { sync() {}, destroy() {} };
+
+    let duration = 0;
+    let targetProgress = 0;
+    let renderProgress = 0;
+    let rafId = 0;
+    let destroyed = false;
+    let seeking = false;
+    let pendingTime = -1;
+
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.preload = "auto";
+    video.pause();
+
+    function applyTime(t) {
+        if (!Number.isFinite(duration) || duration <= 0) return;
+        const next = Math.min(Math.max(t, 0), Math.max(duration - 0.04, 0));
+        if (seeking) {
+            pendingTime = next;
+            return;
+        }
+        if (Math.abs(video.currentTime - next) < 0.02) return;
+        seeking = true;
+        try {
+            video.currentTime = next;
+        } catch (_) {
+            seeking = false;
+        }
+    }
+
+    function onSeeked() {
+        seeking = false;
+        if (pendingTime >= 0) {
+            const t = pendingTime;
+            pendingTime = -1;
+            applyTime(t);
+        }
+    }
+
+    function tick() {
+        rafId = 0;
+        if (destroyed) return;
+
+        targetProgress = progressDriver.getProgress();
+        // Snap on phone so motion is obvious while dragging
+        renderProgress = targetProgress;
+
+        if (duration > 0) applyTime(renderProgress * duration);
+
+        // Keep sampling while visible — phone scroll/touch is unreliable otherwise
+        if (!document.hidden) {
+            rafId = requestAnimationFrame(tick);
+        }
+    }
+
+    function kick() {
+        if (destroyed) return;
+        if (!rafId) rafId = requestAnimationFrame(tick);
+    }
+
+    function onMeta() {
+        duration = video.duration || 0;
+        if (Number.isFinite(duration) && duration > 0) kick();
+    }
+
+    video.addEventListener("loadedmetadata", onMeta);
+    video.addEventListener("durationchange", onMeta);
+    video.addEventListener("seeked", onSeeked);
+    video.addEventListener("play", () => { video.pause(); });
+
+    // Unlock media on first gesture (some Android browsers)
+    const unlock = () => {
+        video.muted = true;
+        const p = video.play();
+        if (p && typeof p.then === "function") {
+            p.then(() => video.pause()).catch(() => {});
+        } else {
+            try { video.pause(); } catch (_) { /* ignore */ }
+        }
+        kick();
+    };
+    window.addEventListener("touchstart", unlock, { passive: true, once: true });
+    window.addEventListener("pointerdown", unlock, { passive: true, once: true });
+
+    if (video.readyState >= 1) onMeta();
+    try { video.load(); } catch (_) { /* ignore */ }
+
+    progressDriver.bind(kick);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) kick();
+    });
+    kick();
+
+    return {
+        sync: kick,
+        destroy() {
+            destroyed = true;
+            cancelAnimationFrame(rafId);
+            video.removeEventListener("loadedmetadata", onMeta);
+            video.removeEventListener("durationchange", onMeta);
+            video.removeEventListener("seeked", onSeeked);
+        }
+    };
+}
+
+function createScrollFrameEngine() {
+    const progressDriver = createProgressDriver();
+    const useMobileVideo = window.matchMedia("(max-width: 768px)").matches
+        || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (useMobileVideo) {
+        return createMobileVideoEngine(progressDriver);
+    }
+    return createDesktopFrameEngine(progressDriver);
 }
 
 let heroFrameEngine = null;
