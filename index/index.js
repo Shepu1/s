@@ -381,15 +381,61 @@ function createFrameEngine(progressDriver) {
     let resizeRaf = 0;
     let destroyed = false;
     let idleLoadCursor = 0;
+    let lockedCssW = 0;
+    let lockedCssH = 0;
 
-    function resizeCanvas() {
+    function viewportCssSize() {
+        // Prefer stable screen metrics on phone so toolbar collapse doesn't change cover scale
+        if (isPhone) {
+            const w = Math.max(
+                window.innerWidth || 0,
+                document.documentElement.clientWidth || 0,
+                window.screen?.width || 0
+            );
+            const h = Math.max(
+                window.innerHeight || 0,
+                document.documentElement.clientHeight || 0,
+                window.screen?.height || 0,
+                (window.visualViewport && window.visualViewport.height) || 0
+            );
+            return { w, h };
+        }
+        return {
+            w: window.innerWidth || document.documentElement.clientWidth || 1,
+            h: window.innerHeight || document.documentElement.clientHeight || 1
+        };
+    }
+
+    function resizeCanvas(force) {
         const dpr = Math.min(window.devicePixelRatio || 1, isPhone ? 1.25 : 2);
-        const w = Math.max(1, Math.round(window.innerWidth * dpr));
-        const h = Math.max(1, Math.round(window.innerHeight * dpr));
+        let { w: cssW, h: cssH } = viewportCssSize();
+
+        if (isPhone) {
+            // Orientation change: width/height swap a lot — reset lock
+            const orientChanged = lockedCssW > 0 && (
+                (cssW > cssH) !== (lockedCssW > lockedCssH)
+                || Math.abs(cssW - lockedCssW) > 100
+            );
+            if (!force && !orientChanged && lockedCssW && lockedCssH) {
+                // Never shrink with URL bar; only keep the locked cover scale
+                cssW = lockedCssW;
+                cssH = lockedCssH;
+            } else {
+                // Lock to the larger stable box once (or on orientation)
+                cssW = Math.max(cssW, lockedCssW || 0);
+                cssH = Math.max(cssH, lockedCssH || 0, window.innerHeight || 0);
+                lockedCssW = cssW;
+                lockedCssH = cssH;
+            }
+        }
+
+        const w = Math.max(1, Math.round(cssW * dpr));
+        const h = Math.max(1, Math.round(cssH * dpr));
         if (canvas.width !== w || canvas.height !== h) {
             canvas.width = w;
             canvas.height = h;
             drawnIndex = -1;
+            if (wantIndex >= 0) paint(wantIndex);
         }
     }
 
@@ -540,19 +586,37 @@ function createFrameEngine(progressDriver) {
     function onResize() {
         cancelAnimationFrame(resizeRaf);
         resizeRaf = requestAnimationFrame(() => {
-            resizeCanvas();
+            // Phone: ignore soft resizes from browser chrome; only orientation/real resize
+            if (isPhone) {
+                const { w, h } = viewportCssSize();
+                const orientChanged = lockedCssW > 0 && (
+                    (w > h) !== (lockedCssW > lockedCssH)
+                    || Math.abs(w - lockedCssW) > 100
+                );
+                if (!orientChanged) return;
+                lockedCssW = 0;
+                lockedCssH = 0;
+            }
+            resizeCanvas(true);
             drawnIndex = -1;
             kick();
         });
     }
 
-    resizeCanvas();
+    resizeCanvas(true);
     enqueue(0, true);
     for (let i = 1; i < (isPhone ? 48 : 24); i++) enqueue(i, false);
     scheduleIdleFill();
     progressDriver.bind(kick);
     window.addEventListener("resize", onResize, { passive: true });
-    if (window.visualViewport) {
+    window.addEventListener("orientationchange", () => {
+        lockedCssW = 0;
+        lockedCssH = 0;
+        resizeCanvas(true);
+        kick();
+    }, { passive: true });
+    // Do NOT bind visualViewport.resize on phone — it fires when URL bar toggles (fake zoom)
+    if (!isPhone && window.visualViewport) {
         window.visualViewport.addEventListener("resize", onResize, { passive: true });
     }
     if (isPhone) {
