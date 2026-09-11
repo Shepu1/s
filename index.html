@@ -11,6 +11,7 @@
     <link rel="icon" type="image/png" href="index/assets/home.png" sizes="any">
     <link rel="apple-touch-icon" href="index/assets/home.png">
     <link rel="preload" href="index/index.css" as="style">
+    <link rel="preload" as="image" href="index/home/portfolio_frames_24fps/frame_0001.jpg" fetchpriority="high">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,300..500,0,0&display=block">
     <link rel="stylesheet" href="index/index.css">
@@ -184,14 +185,21 @@
         <p id="detailContent"></p>
     </div>
 
+    <div class="site-bg" aria-hidden="true">
+        <canvas id="site-bg-canvas" class="site-bg-canvas"></canvas>
+        <div class="site-bg-veil"></div>
+    </div>
+
     <main>
         <section class="hero" id="home">
-            <h1 id="typewriter-text"></h1>
-            <p class="hero-sub reveal">Web Developer · Python · AI Chatbots · HTML, CSS, JavaScript</p>
-            <div class="reveal hero-cta">
-                <a href="#projects" class="btn">See Projects</a>
-                <a href="index/apps/Apps&Games.html" class="btn btn-outline restricted-link">Apps & Games</a>
-                <a href="index/contact/contact.html" class="btn btn-ghost restricted-link">Contact</a>
+            <div class="hero-content">
+                <h1 id="typewriter-text"></h1>
+                <p class="hero-sub reveal">Web Developer · Python · AI Chatbots · HTML, CSS, JavaScript</p>
+                <div class="reveal hero-cta">
+                    <a href="#projects" class="btn">See Projects</a>
+                    <a href="index/apps/Apps&Games.html" class="btn btn-outline restricted-link">Apps & Games</a>
+                    <a href="index/contact/contact.html" class="btn btn-ghost restricted-link">Contact</a>
+                </div>
             </div>
             <a href="#about" class="hero-scroll" aria-label="Scroll to about">
                 <span></span>
