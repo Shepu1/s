@@ -804,23 +804,19 @@ nav ul#nav-links { order: 2; margin-left: auto; }
 .site-bg-video {
     object-fit: cover;
     object-position: center center;
-    /* Desktop: frames via canvas. Phone: single mp4 (JPG sequence stalls on mobile) */
+    /* Kept in DOM as optional asset; scrub uses JPG canvas on all devices */
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
 }
 .site-bg-canvas {
     opacity: 1;
     visibility: visible;
 }
 @media (max-width: 768px) {
-    .site-bg-video {
+    .site-bg-canvas {
         opacity: 1;
         visibility: visible;
-        object-position: 88% center;
-    }
-    .site-bg-canvas {
-        opacity: 0;
-        visibility: hidden;
     }
 }
 .site-bg-veil {
