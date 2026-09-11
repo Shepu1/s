@@ -357,11 +357,16 @@ function createProgressDriver() {
     };
 }
 
-function createDesktopFrameEngine(progressDriver) {
+function createFrameEngine(progressDriver) {
     const canvas = document.getElementById("site-bg-canvas");
     if (!canvas) return { sync() {}, destroy() {} };
 
-    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+    const isPhone = window.matchMedia("(max-width: 768px)").matches
+        || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const concurrency = isPhone ? 6 : FRAME_CONCURRENCY;
+    const preloadRadius = isPhone ? 48 : PRELOAD_RADIUS;
+
+    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: !isPhone });
     const images = new Array(TOTAL_FRAMES);
     const status = new Array(TOTAL_FRAMES).fill(0);
     const queued = new Set();
@@ -378,7 +383,7 @@ function createDesktopFrameEngine(progressDriver) {
     let idleLoadCursor = 0;
 
     function resizeCanvas() {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, isPhone ? 1.25 : 2);
         const w = Math.max(1, Math.round(window.innerWidth * dpr));
         const h = Math.max(1, Math.round(window.innerHeight * dpr));
         if (canvas.width !== w || canvas.height !== h) {
@@ -394,6 +399,7 @@ function createDesktopFrameEngine(progressDriver) {
         if (!cw || !ch || !img) return;
         const ir = img.naturalWidth / img.naturalHeight;
         const cr = cw / ch;
+        const xAnchor = window.matchMedia("(max-width: 768px)").matches ? 0.88 : 0.5;
         let dw;
         let dh;
         let dx;
@@ -401,7 +407,7 @@ function createDesktopFrameEngine(progressDriver) {
         if (ir > cr) {
             dh = ch;
             dw = ch * ir;
-            dx = (cw - dw) * 0.5;
+            dx = (cw - dw) * xAnchor;
             dy = 0;
         } else {
             dw = cw;
@@ -434,7 +440,7 @@ function createDesktopFrameEngine(progressDriver) {
     }
 
     function pumpQueue() {
-        while (activeLoads < FRAME_CONCURRENCY && queue.length) {
+        while (activeLoads < concurrency && queue.length) {
             const index = queue.shift();
             queued.delete(index);
             if (status[index] !== 0) continue;
@@ -446,7 +452,7 @@ function createDesktopFrameEngine(progressDriver) {
                 images[index] = img;
                 status[index] = 2;
                 activeLoads--;
-                if (index === wantIndex || drawnIndex < 0) {
+                if (index === wantIndex || Math.abs(index - wantIndex) <= 2 || drawnIndex < 0) {
                     drawnIndex = -1;
                     paint(wantIndex);
                 }
@@ -472,17 +478,18 @@ function createDesktopFrameEngine(progressDriver) {
 
     function prioritizeAround(center) {
         enqueue(center, true);
-        for (let d = 1; d <= PRELOAD_RADIUS; d++) {
-            enqueue(center + d, d <= 6);
-            enqueue(center - d, d <= 6);
+        for (let d = 1; d <= preloadRadius; d++) {
+            enqueue(center + d, d <= 8);
+            enqueue(center - d, d <= 8);
         }
     }
 
     function scheduleIdleFill() {
+        const batch = isPhone ? 4 : 6;
         const step = () => {
             if (destroyed) return;
             let n = 0;
-            while (idleLoadCursor < TOTAL_FRAMES && n < 6) {
+            while (idleLoadCursor < TOTAL_FRAMES && n < batch) {
                 if (status[idleLoadCursor] === 0) {
                     enqueue(idleLoadCursor, false);
                     n++;
@@ -491,10 +498,10 @@ function createDesktopFrameEngine(progressDriver) {
             }
             if (idleLoadCursor < TOTAL_FRAMES) {
                 if ("requestIdleCallback" in window) requestIdleCallback(step, { timeout: 800 });
-                else setTimeout(step, 70);
+                else setTimeout(step, isPhone ? 90 : 70);
             }
         };
-        setTimeout(step, 120);
+        setTimeout(step, 80);
     }
 
     function tick() {
@@ -502,14 +509,21 @@ function createDesktopFrameEngine(progressDriver) {
         if (destroyed) return;
 
         targetProgress = progressDriver.getProgress();
-        renderProgress += (targetProgress - renderProgress) * SCRUB_LERP;
-        if (Math.abs(targetProgress - renderProgress) < 0.00025) renderProgress = targetProgress;
+        if (isPhone) {
+            renderProgress = targetProgress;
+        } else {
+            renderProgress += (targetProgress - renderProgress) * SCRUB_LERP;
+            if (Math.abs(targetProgress - renderProgress) < 0.00025) renderProgress = targetProgress;
+        }
 
         wantIndex = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(renderProgress * (TOTAL_FRAMES - 1))));
         prioritizeAround(wantIndex);
         paint(wantIndex);
 
-        if (
+        // Phone: always keep sampling (touch + scroll)
+        if (isPhone) {
+            if (!document.hidden) rafId = requestAnimationFrame(tick);
+        } else if (
             progressDriver.isTouching()
             || progressDriver.coastActive()
             || renderProgress !== targetProgress
@@ -534,10 +548,18 @@ function createDesktopFrameEngine(progressDriver) {
 
     resizeCanvas();
     enqueue(0, true);
-    for (let i = 1; i < 24; i++) enqueue(i, false);
+    for (let i = 1; i < (isPhone ? 48 : 24); i++) enqueue(i, false);
     scheduleIdleFill();
     progressDriver.bind(kick);
     window.addEventListener("resize", onResize, { passive: true });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", onResize, { passive: true });
+    }
+    if (isPhone) {
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) kick();
+        });
+    }
     kick();
 
     return {
@@ -550,126 +572,9 @@ function createDesktopFrameEngine(progressDriver) {
     };
 }
 
-function createMobileVideoEngine(progressDriver) {
-    const video = document.getElementById("site-bg-video");
-    if (!video) return { sync() {}, destroy() {} };
-
-    let duration = 0;
-    let targetProgress = 0;
-    let renderProgress = 0;
-    let rafId = 0;
-    let destroyed = false;
-    let seeking = false;
-    let pendingTime = -1;
-
-    video.muted = true;
-    video.defaultMuted = true;
-    video.playsInline = true;
-    video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "");
-    video.preload = "auto";
-    video.pause();
-
-    function applyTime(t) {
-        if (!Number.isFinite(duration) || duration <= 0) return;
-        const next = Math.min(Math.max(t, 0), Math.max(duration - 0.04, 0));
-        if (seeking) {
-            pendingTime = next;
-            return;
-        }
-        if (Math.abs(video.currentTime - next) < 0.02) return;
-        seeking = true;
-        try {
-            video.currentTime = next;
-        } catch (_) {
-            seeking = false;
-        }
-    }
-
-    function onSeeked() {
-        seeking = false;
-        if (pendingTime >= 0) {
-            const t = pendingTime;
-            pendingTime = -1;
-            applyTime(t);
-        }
-    }
-
-    function tick() {
-        rafId = 0;
-        if (destroyed) return;
-
-        targetProgress = progressDriver.getProgress();
-        // Snap on phone so motion is obvious while dragging
-        renderProgress = targetProgress;
-
-        if (duration > 0) applyTime(renderProgress * duration);
-
-        // Keep sampling while visible — phone scroll/touch is unreliable otherwise
-        if (!document.hidden) {
-            rafId = requestAnimationFrame(tick);
-        }
-    }
-
-    function kick() {
-        if (destroyed) return;
-        if (!rafId) rafId = requestAnimationFrame(tick);
-    }
-
-    function onMeta() {
-        duration = video.duration || 0;
-        if (Number.isFinite(duration) && duration > 0) kick();
-    }
-
-    video.addEventListener("loadedmetadata", onMeta);
-    video.addEventListener("durationchange", onMeta);
-    video.addEventListener("seeked", onSeeked);
-    video.addEventListener("play", () => { video.pause(); });
-
-    // Unlock media on first gesture (some Android browsers)
-    const unlock = () => {
-        video.muted = true;
-        const p = video.play();
-        if (p && typeof p.then === "function") {
-            p.then(() => video.pause()).catch(() => {});
-        } else {
-            try { video.pause(); } catch (_) { /* ignore */ }
-        }
-        kick();
-    };
-    window.addEventListener("touchstart", unlock, { passive: true, once: true });
-    window.addEventListener("pointerdown", unlock, { passive: true, once: true });
-
-    if (video.readyState >= 1) onMeta();
-    try { video.load(); } catch (_) { /* ignore */ }
-
-    progressDriver.bind(kick);
-    document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) kick();
-    });
-    kick();
-
-    return {
-        sync: kick,
-        destroy() {
-            destroyed = true;
-            cancelAnimationFrame(rafId);
-            video.removeEventListener("loadedmetadata", onMeta);
-            video.removeEventListener("durationchange", onMeta);
-            video.removeEventListener("seeked", onSeeked);
-        }
-    };
-}
-
 function createScrollFrameEngine() {
-    const progressDriver = createProgressDriver();
-    const useMobileVideo = window.matchMedia("(max-width: 768px)").matches
-        || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    if (useMobileVideo) {
-        return createMobileVideoEngine(progressDriver);
-    }
-    return createDesktopFrameEngine(progressDriver);
+    // Same smooth JPG sequence on phone + desktop (touch-progress fixes mobile scrub)
+    return createFrameEngine(createProgressDriver());
 }
 
 let heroFrameEngine = null;
